@@ -1,0 +1,35 @@
+// tsconfig.base.json
+{
+  "compilerOptions": {
+    /* Base Options */
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "target": "ES2022",
+    "allowJs": true,
+    "allowImportingTsExtensions":  true,
+    "resolveJsonModule": true,
+    "moduleDetection": "force",
+    "isolatedModules": true,
+
+    /* Strictness */
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitAny": true,
+
+    /* Module settings for modern Node.js */
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+
+    /* For tsx to work with path aliases if you add them later */
+    "baseUrl": ".",
+
+    "paths": {
+      "@fraimwork/core": [
+        "./packages/core/src/*"
+      ],
+      "@fraimwork/openai": [
+        "./packages/openai/src/*"
+      ]
+    }
+  }
+}

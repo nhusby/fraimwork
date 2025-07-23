@@ -1,0 +1,38 @@
+{
+  "name": "@fraimwork/core",
+  "version": "0.1.0",
+  "description": "Core interfaces and agent logic for Fraimwork.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts --sourcemap",
+    "test": "jest"
+  },
+  "keywords": [
+    "ai",
+    "agent",
+    "framework",
+    "core"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "json-schema": "^0.4.0"
+  },
+  "devDependencies": {
+    "@types/json-schema": "^7.0.15"
+  }
+}
