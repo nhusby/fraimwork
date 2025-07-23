@@ -1,15 +1,24 @@
 {
   "name": "@fraimwork/core",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "description": "Core interfaces and agent logic for Fraimwork.",
-  "type": "module",
-  "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
-  "types": "./dist/index.d.ts",
-  "files": [
-    "dist",
-    "src"
+  "keywords": [
+    "ai",
+    "agent",
+    "framework",
+    "core"
   ],
+  "homepage": "https://github.com/nhusby/fraimwork#readme",
+  "bugs": {
+    "url": "https://github.com/nhusby/fraimwork/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nhusby/fraimwork.git"
+  },
+  "license": "MIT",
+  "author": "Nick Husby",
+  "type": "module",
   "exports": {
     ".": {
       "types": "./src/index.ts",
@@ -17,22 +26,21 @@
       "require": "./dist/index.js"
     }
   },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm --dts --sourcemap",
     "test": "jest"
   },
-  "keywords": [
-    "ai",
-    "agent",
-    "framework",
-    "core"
-  ],
-  "author": "Your Name",
-  "license": "MIT",
   "dependencies": {
     "json-schema": "^0.4.0"
   },
   "devDependencies": {
     "@types/json-schema": "^7.0.15"
-  }
+  },
+  "module": "./dist/index.mjs"
 }

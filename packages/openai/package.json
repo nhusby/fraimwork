@@ -1,15 +1,18 @@
 {
   "name": "@fraimwork/openai",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "description": "OpenAI provider for the Fraimwork AI agent framework.",
+  "homepage": "https://github.com/nhusby/fraimwork#readme",
+  "bugs": {
+    "url": "https://github.com/nhusby/fraimwork/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nhusby/fraimwork.git"
+  },
+  "license": "MIT",
+  "author": "Nick Husby",
   "type": "module",
-  "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
-  "types": "./dist/index.d.ts",
-  "files": [
-    "dist",
-    "src"
-  ],
   "exports": {
     ".": {
       "types": "./src/index.ts",
@@ -17,12 +20,17 @@
       "require": "./dist/index.js"
     }
   },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
   "scripts": {
-    "build": "tsup src/index.ts --format cjs,esm --dts --sourcemap"
+    "build": "tsup src/index.ts --format cjs,esm --dts --sourcemap --external @fraimwork/core"
   },
-  "author": "Your Name",
-  "license": "MIT",
   "dependencies": {
     "openai": "^5.10.2"
-  }
+  },
+  "module": "./dist/index.mjs"
 }
