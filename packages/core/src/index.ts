@@ -1,4 +1,3 @@
-// Export all components from the core package
 export * from './Agent.ts';
 export * from './FailoverAgent.ts';
 export * from './LLMService.ts';
