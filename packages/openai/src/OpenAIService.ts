@@ -1,7 +1,15 @@
 import { EventEmitter } from "node:events";
 import OpenAI, { ClientOptions } from "openai";
 import type { ChatCompletionCreateParamsStreaming } from "openai/resources";
-import {d, estimateTokens, LLMService, Message, StreamablePromise, Tool, ToolCall,} from "@fraimwork/core"
+import {
+  d,
+  estimateTokens,
+  LLMService,
+  Message,
+  StreamablePromise,
+  Tool,
+  ToolCall,
+} from "@fraimwork/core";
 
 export class OpenAIService extends LLMService {
   protected client: OpenAI;
@@ -115,10 +123,10 @@ export class OpenAIService extends LLMService {
 
       const message = new Message(
         "assistant",
-        "reasoning" in response.choices[0]!.message &&
+        ("reasoning" in response.choices[0]!.message &&
         response.choices[0]!.message.reasoning
           ? `\n<think>\n${response.choices[0]!.message.reasoning}\n</think>\n`
-          : "" + response.choices[0]?.message?.content || "",
+          : "") + response.choices[0]?.message?.content || "",
       );
 
       if (params.parseToolCalls) {

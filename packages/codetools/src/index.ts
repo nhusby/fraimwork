@@ -11,9 +11,4 @@ import { codeIndexLite } from "./CodeIndexLite.ts";
 import { findSymbol } from "./FindSymbol.ts";
 
 // Array of all tools
-export const all = [
-    analyzeDependencies,
-    codeIndex,
-    codeIndexLite,
-    findSymbol,
-];
+export const all = [analyzeDependencies, codeIndex, codeIndexLite, findSymbol];

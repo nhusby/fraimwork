@@ -30,26 +30,26 @@ import { writeFile } from "./WriteFile.ts";
 
 // Array of all tools
 export const all = [
-    appendFile,
-    createDirectory,
-    deleteFile,
-    editFile,
-    findAndReplace,
-    getFileInfo,
-    listFiles,
-    multiEdit,
-    readFile,
-    readManyFiles,
-    renameFile,
-    search,
-    writeFile,
+  appendFile,
+  createDirectory,
+  deleteFile,
+  editFile,
+  findAndReplace,
+  getFileInfo,
+  listFiles,
+  multiEdit,
+  readFile,
+  readManyFiles,
+  renameFile,
+  search,
+  writeFile,
 ];
 
 // Array of readonly tools (tools that don't modify files)
 export const readonly = [
-    getFileInfo,
-    listFiles,
-    readFile,
-    readManyFiles,
-    search,
+  getFileInfo,
+  listFiles,
+  readFile,
+  readManyFiles,
+  search,
 ];

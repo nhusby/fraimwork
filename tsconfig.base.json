@@ -6,7 +6,7 @@
     "skipLibCheck": true,
     "target": "ES2022",
     "allowJs": true,
-    "allowImportingTsExtensions":  true,
+    "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "moduleDetection": "force",
     "isolatedModules": true,
@@ -24,12 +24,8 @@
     "baseUrl": ".",
 
     "paths": {
-      "@fraimwork/core": [
-        "./packages/core/src/*"
-      ],
-      "@fraimwork/openai": [
-        "./packages/openai/src/*"
-      ]
+      "@fraimwork/core": ["./packages/core/src/*"],
+      "@fraimwork/openai": ["./packages/openai/src/*"]
     }
   }
 }

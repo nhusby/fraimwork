@@ -26,23 +26,7 @@ export abstract class LLMService {
     if (params.parseToolCalls && params.tools) {
       processedParams.messages = [
         this.generateToolsSystemMessage(params.tools),
-        ...params.messages.map((message) => {
-          // this must EXACTLY match the format in generateToolsSystemMessage, or the LLM will get confused
-          if (message.toolCalls?.length) {
-            message.content =
-              (message.content ? `${message.content}\n` : "") +
-              message.toolCalls
-                ?.map(
-                  (toolCall) =>
-                    `<ToolCall>\n${JSON.stringify({
-                      tool: toolCall.name,
-                      parameters: toolCall.args,
-                    })}\n</ToolCall>`,
-                )
-                .join("\n");
-          }
-          return message;
-        }),
+        ...params.messages,
       ];
       delete processedParams.tools;
     }
