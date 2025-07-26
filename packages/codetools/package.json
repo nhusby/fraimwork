@@ -36,10 +36,11 @@
     "src"
   ],
   "scripts": {
-    "build": "tsup src/index.ts --format cjs,esm --dts --sourcemap"
+    "build": "tsup src/index.ts --format cjs,esm --sourcemap"
   },
   "dependencies": {
-    "glob": "^10.3.10"
+    "glob": "^10.3.10",
+    "typescript": "^5.8.3"
   },
   "peerDependencies": {
     "@fraimwork/core": "0.0.9"
