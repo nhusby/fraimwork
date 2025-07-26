@@ -10,7 +10,7 @@ export function editFile(): Tool {
     {
       name: "EditFile",
       description:
-        "Edit a file by replacing existing text with new text. Enforces context validation with at least 3 lines or 40 characters before and after the replacement (except at file boundaries). Only allows a single replacement per call.  Edit will fail if there is more than one match for oldString",
+        "Edit a file by replacing existing text with new text. Enforces context validation with at least 3 lines or 40 characters before and after the replacement (except at file boundaries). Only allows a single replacement per call.  Edit will fail if there is more than one match for `oldString`",
       parameters: {
         path: {
           type: "string",
