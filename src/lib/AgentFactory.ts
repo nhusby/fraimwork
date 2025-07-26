@@ -1,5 +1,5 @@
 import { Agent, FailoverAgent } from "@fraimwork/core";
-import { createModelConfig, createModelConfigs } from "../models.js";
+import { createModelConfig, createModelConfigs } from "../models.ts";
 
 export class AgentFactory {
   static getAgent<T extends Agent>(

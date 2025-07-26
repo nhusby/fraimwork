@@ -1,5 +1,5 @@
 import { Tool, Agent, Message, ModelConfig } from "@fraimwork/core";
-import { AgentFactory } from "../lib/AgentFactory.js";
+import { AgentFactory } from "../lib/AgentFactory.ts";
 
 export function askAgent(
   agentClass: typeof Agent,

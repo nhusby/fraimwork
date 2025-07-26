@@ -89,7 +89,7 @@ async function interactiveCLI() {
 async function handleCommand(userInput: string) {
   const [commandName, ...args] = userInput.slice(1).split(" ");
 
-  switch (commandName.toLowerCase()) {
+  switch (commandName!.toLowerCase()) {
     case "exit":
       console.log("Goodbye!");
       process.exit(0); // Exit the process
@@ -171,7 +171,7 @@ async function handleCommand(userInput: string) {
     try {
       const params: Record<string, any> = {};
       for (let i = 0; i < args.length; i++) {
-        const arg = args[i];
+        const arg = args[i]!;
         if (arg.startsWith("--")) {
           const key = arg.slice(2);
           const value = args[i + 1];
@@ -197,7 +197,7 @@ async function handleCommand(userInput: string) {
       ) {
         const toolParams = Object.keys(tool.parameters);
         if (toolParams.length === 1) {
-          params[toolParams[0]] = args.join(" ");
+          params[toolParams[0]!] = args.join(" ");
         }
       }
 
