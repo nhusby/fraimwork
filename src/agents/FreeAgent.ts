@@ -1,6 +1,6 @@
 import { FailoverAgent } from "@fraimwork/core";
 import { Message } from "@fraimwork/core";
-import { createModelConfig } from "../models.ts";
+import { createModelConfig } from "../models.js";
 import { codeIndex, findSymbol } from "@fraimwork/codetools";
 import {
   deleteFile,

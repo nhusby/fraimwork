@@ -1,4 +1,4 @@
-import {codeIndexLite as codeIndex, findSymbol} from "@fraimwork/codetools";
+import { codeIndexLite as codeIndex, findSymbol } from "@fraimwork/codetools";
 import { Agent, Message } from "@fraimwork/core";
 import { listFiles, readFile, search } from "@fraimwork/filetools";
 
@@ -31,28 +31,21 @@ export class CodeQueryAgent extends Agent {
   `;
 
   public temperature = 0.2;
-  public tools = [
-    listFiles(),
-    search(),
-    findSymbol(),
-    readFile(),
-  ];
+  public tools = [listFiles(), search(), findSymbol(), readFile()];
 
   protected override async processMessage(
     message: Message,
     context: Message[],
   ): Promise<Message[]> {
-
     context.unshift(
       new Message(
         "system",
         `This is the index for the current working directory:
-${(await codeIndex().call({}))}
+${await codeIndex().call({})}
 `,
       ),
     );
 
     return super.processMessage(message, context);
   }
-
 }

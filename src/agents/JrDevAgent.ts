@@ -10,7 +10,6 @@ import {
   writeFile,
 } from "@fraimwork/filetools";
 
-
 export class JrDevAgent extends Agent {
   static defaultModel = "qwen/qwen3-30b-a3b:free";
   public readonly systemPrompt = `You are a TypeScript programming agent.  Your job is to edit and write code as instructed.

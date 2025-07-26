@@ -44,13 +44,6 @@ export class OpenAIService extends LLMService {
       stream: params.streaming,
     };
 
-    d(
-      params.messages.slice(-3).map((message) => ({
-        role: message.role,
-        content: String(message.content).replace(/\s+/g, " ").substring(0, 60),
-      })),
-    );
-
     const context = params.messages
       .map((message) => message.content)
       .join("\n");

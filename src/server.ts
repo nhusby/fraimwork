@@ -6,7 +6,7 @@ import { DoofyDevAgent } from "./agents/DoofyDevAgent";
 import { FreeAgent } from "./agents/FreeAgent";
 import { Message, Agent } from "@fraimwork/core";
 import { AgentFactory } from "./lib/AgentFactory";
-import {createHash} from "crypto";
+import { createHash } from "crypto";
 
 const conversationHistoryFile = "./conversationHistory.json";
 

@@ -24,8 +24,8 @@
     "baseUrl": ".",
 
     "paths": {
-      "@fraimwork/core": ["./packages/core/src/*"],
-      "@fraimwork/openai": ["./packages/openai/src/*"],
+      "@fraimwork/core": ["./packages/core/src/index.ts"],
+      "@fraimwork/openai": ["./packages/openai/src/index.ts"],
       "@fraimwork/filetools": ["./packages/filetools/src/index.ts"],
       "@fraimwork/codetools": ["./packages/codetools/src/index.ts"]
     }

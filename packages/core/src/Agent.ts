@@ -50,7 +50,6 @@ export abstract class Agent extends EventEmitter {
     message?: Message,
     streaming: boolean = true,
   ): Promise<Message> {
-    console.log("AGENT.SEND", { streaming });
     const messages = message
       ? await this.processMessage(message, await this.getHistoricalContext())
       : await this.getHistoricalContext();
@@ -80,10 +79,6 @@ export abstract class Agent extends EventEmitter {
 
     const reply = await streamablePromise;
     streamablePromise.removeAllListeners();
-    d({
-      role: "agent",
-      content: reply.content.replace(/\s+/g, " ").substring(0, 60),
-    });
     try {
       const newReply = (await this.processReply(
         reply,
@@ -106,7 +101,6 @@ export abstract class Agent extends EventEmitter {
 
     if (reply.toolCalls?.length) {
       for (const toolCall of reply.toolCalls) {
-        d({ toolCall });
         try {
           const tool = this.tools.find((t) => t.name === toolCall.name);
           if (tool) {
