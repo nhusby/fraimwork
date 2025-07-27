@@ -45,7 +45,7 @@ export const MODELS: Record<string, ModelConfig> = {
     name: "moonshotai/kimi-k2",
     providers: ["chutes/fp8"],
     category: "senior",
-    pricing: { input: 0, output: 0, throughput: 40 },
+    pricing: { input: 0, output: 0, throughput: 70 },
     apiProvider: "openrouter",
   },
   "moonshotai/kimi-k2": {
@@ -61,6 +61,13 @@ export const MODELS: Record<string, ModelConfig> = {
     category: "senior",
     pricing: { input: 0, output: 0, throughput: 40 },
     apiProvider: "moonshot",
+  },
+  "qwen/qwen3-coder:free": {
+    name: "qwen/qwen3-coder:free",
+    // providers: ["chutes/fp8"],
+    category: "senior",
+    pricing: { input: 0, output: 0, throughput: 35 },
+    apiProvider: "openrouter",
   },
 
   // Mid-level Engineer

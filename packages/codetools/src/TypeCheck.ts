@@ -1,8 +1,8 @@
-import * as fs from "fs/promises";
-import * as path from "path";
 import { Tool } from "@fraimwork/core";
-import ts from "typescript";
+import { exec } from "child_process";
+import { promisify } from "util";
 
+const execPromise = promisify(exec);
 /**
  * Type checks a TypeScript file or directory and returns errors
  */
@@ -19,134 +19,69 @@ export function typeCheck(): Tool {
       },
     },
     async (args: Record<string, any>) => {
-      const { path: targetPath } = args as {
-        path: string;
-      };
+      const { path } = args || {};
+
+      // Run npx tsc with appropriate flags
+      const command = `npx tsc --noEmit ${!path ? "" : path.match(/tsx?$/) ? path : `${path}**/*.ts`}`;
 
       try {
-        // Resolve the absolute path
-        const absolutePath = path.resolve(targetPath);
-        
-        // Check if path exists
-        try {
-          await fs.access(absolutePath);
-        } catch {
-          return `Error: Path '${absolutePath}' does not exist`;
-        }
-
-        // Get file stats to determine if it's a file or directory
-        const stats = await fs.stat(absolutePath);
-        
-        let filesToCheck: string[] = [];
-        
-        if (stats.isFile()) {
-          if (!absolutePath.endsWith('.ts') && !absolutePath.endsWith('.tsx')) {
-            return `Error: File '${absolutePath}' is not a TypeScript file`;
-          }
-          filesToCheck = [absolutePath];
-        } else if (stats.isDirectory()) {
-          // Find all TypeScript files in directory
-          const getAllTsFiles = async (dir: string): Promise<string[]> => {
-            const entries = await fs.readdir(dir, { withFileTypes: true });
-            const files = await Promise.all(
-              entries.map((entry) => {
-                const fullPath = path.join(dir, entry.name);
-                if (entry.isDirectory()) {
-                  // Skip node_modules and other common directories
-                  if (entry.name === 'node_modules' || 
-                      entry.name === '.git' || 
-                      entry.name === 'dist' || 
-                      entry.name === 'build') {
-                    return [];
-                  }
-                  return getAllTsFiles(fullPath);
-                } else if (entry.isFile() && (entry.name.endsWith('.ts') || entry.name.endsWith('.tsx'))) {
-                  return [fullPath];
-                }
-                return [];
-              })
-            );
-            return files.flat();
-          };
-          
-          filesToCheck = await getAllTsFiles(absolutePath);
-        } else {
-          return `Error: Path '${absolutePath}' is neither a file nor a directory`;
-        }
-
-        if (filesToCheck.length === 0) {
-          return "No TypeScript files found to check";
-        }
-
-        // Create a program to type check the files
-        const program = ts.createProgram(filesToCheck, {
-          allowJs: false,
-          checkJs: false,
-          strict: true,
-          noEmit: true,
-          target: ts.ScriptTarget.ES2020,
-          module: ts.ModuleKind.ES2020,
-          moduleResolution: ts.ModuleResolutionKind.Node16,
-          esModuleInterop: true,
-          skipLibCheck: true,
-          resolveJsonModule: true,
+        const { stdout, stderr } = await execPromise(command, {
+          cwd: process.cwd(),
+          maxBuffer: 1024 * 1024 * 10, // 10MB buffer
         });
 
-        // Get diagnostics (errors)
-        const diagnostics = ts.getPreEmitDiagnostics(program);
-        
-        // Format diagnostics into a concise format
-        const errors: Array<{
-          file: string;
-          line: number;
-          character: number;
-          message: string;
-          code: number;
-        }> = [];
+        // If there's output in stderr, it might contain errors
+        if (stderr) {
+          // Filter out non-error messages
+          const errorLines = stderr
+            .split("\n")
+            .filter(
+              (line) =>
+                line.includes("error TS") ||
+                (line.includes(":") && line.includes("error")),
+            );
 
-        diagnostics.forEach((diagnostic) => {
-          if (diagnostic.file && diagnostic.start) {
-            const { line, character } = ts.getLineAndCharacterOfPosition(
-              diagnostic.file,
-              diagnostic.start
-            );
-            
-            const message = ts.flattenDiagnosticMessageText(
-              diagnostic.messageText,
-              "\n"
-            );
-            
-            errors.push({
-              file: diagnostic.file.fileName,
-              line: line + 1,
-              character: character + 1,
-              message,
-              code: diagnostic.code,
-            });
-          } else {
-            const message = ts.flattenDiagnosticMessageText(
-              diagnostic.messageText,
-              "\n"
-            );
-            
-            errors.push({
-              file: "unknown",
-              line: 0,
-              character: 0,
-              message,
-              code: diagnostic.code,
-            });
+          if (errorLines.length > 0) {
+            return JSON.stringify(errorLines, null, 2);
           }
-        });
-
-        if (errors.length === 0) {
-          return "No type errors found";
         }
 
-        // Return formatted errors
-        return JSON.stringify(errors, null, 2);
-      } catch (error: any) {
-        return `Error during type checking: ${error.message}`;
+        // If there's output in stdout, it might contain errors
+        if (stdout) {
+          const errorLines = stdout
+            .split("\n")
+            .filter(
+              (line) =>
+                line.includes("error TS") ||
+                (line.includes(":") && line.includes("error")),
+            );
+
+          if (errorLines.length > 0) {
+            return JSON.stringify(errorLines, null, 2);
+          }
+        }
+
+        return "No type errors found";
+      } catch (execError: any) {
+        // Parse the error output to extract meaningful information
+        if (execError.stderr || execError.stdout) {
+          const output = execError.stderr || execError.stdout;
+          const errorLines = output
+            .split("\n")
+            .filter(
+              (line) =>
+                line.includes("error TS") ||
+                (line.includes(":") && line.includes("error")),
+            );
+
+          if (errorLines.length > 0) {
+            return JSON.stringify(errorLines, null, 2);
+          }
+
+          return `TypeScript compilation failed: ${output}`;
+        }
+
+        return `Error during type checking: ${execError.message}`;
       }
     },
   );

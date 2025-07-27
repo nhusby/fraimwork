@@ -20,6 +20,7 @@ const tbt = "```";
 export class FreeAgent extends FailoverAgent {
   public static modelNames = [
     "moonshotai/kimi-k2:free",
+    "qwen/qwen3-coder:free",
     "google/gemini-2.0-flash-exp:free",
     "deepseek/deepseek-r1-0528:free",
     "deepseek/deepseek-chat-v3-0324:free",

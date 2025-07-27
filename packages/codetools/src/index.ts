@@ -13,4 +13,10 @@ import { findSymbol } from "./FindSymbol.ts";
 import { typeCheck } from "./TypeCheck.ts";
 
 // Array of all tools
-export const all = [analyzeDependencies, codeIndex, codeIndexLite, findSymbol, typeCheck];
+export const all = [
+  analyzeDependencies,
+  codeIndex,
+  codeIndexLite,
+  findSymbol,
+  typeCheck,
+];
