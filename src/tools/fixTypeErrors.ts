@@ -14,7 +14,7 @@ export function fixTypeErrors(): Tool {
   return new Tool(
     {
       name: "fixTypeErrors",
-      description: "Fix all TypeScript type errors in source files",
+      description: "Fix all TypeScript errors in source files",
       parameters: {},
     },
     async () => {
@@ -59,7 +59,7 @@ export function fixTypeErrors(): Tool {
 ${tbt}
 ${errorReport}
 ${tbt}
-Please read the file and fix the errors. When done, provide a very brief description of the problem and solution.`;
+When done, provide a very brief description of the problems and what you did to fix them.`;
 
           console.log(agentRequest);
 
@@ -67,7 +67,7 @@ Please read the file and fix the errors. When done, provide a very brief descrip
             const agentResponse = await agentTool.call({
               request: agentRequest,
             });
-            console.log(agentResponse);
+            console.log({agentResponse});
             results.push(`Fixed ${filePath}`);
           } catch (agentError) {
             results.push(
