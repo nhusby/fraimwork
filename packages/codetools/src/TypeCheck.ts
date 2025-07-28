@@ -18,7 +18,7 @@ export function typeCheck(): Tool {
         },
       },
     },
-    async (args: Record<string, any>) => {
+    async (args: { path?: string }) => {
       const { path } = args || {};
 
       // Run npx tsc with appropriate flags

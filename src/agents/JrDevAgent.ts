@@ -55,7 +55,7 @@ export class JrDevAgent extends Agent {
   Always use the ReadFile tool when you need to access file content, even if you have an index. Only use the index for navigation and metadata.
   `;
 
-  public temperature = 0.7;
+  public temperature = 0.2;
   public tools = [
     listFiles(),
     findSymbol(),
