@@ -192,7 +192,7 @@ export const MODELS: Record<string, ModelConfig> = {
   "qwen/qwen3-30b-a3b": {
     // successfully added todos with EditFile
     name: "qwen/qwen3-30b-a3b",
-    providers: ["deepinfra/fp8", "nebius/fp8"],
+    providers: ["parasail/fp8","deepinfra/fp8"],
     category: "junior",
     pricing: { input: 0.08, output: 0.29, throughput: 100 },
     apiProvider: "openrouter",

@@ -114,6 +114,10 @@ export class OpenAIService extends LLMService {
         max_completion_tokens: params.maxTokens,
       });
 
+      if("error" in response){
+        // @ts-ignore
+        throw new Error(`Upstream error: ${response.error.message}`);
+      }
       const message = new Message(
         "assistant",
         ("reasoning" in response.choices[0]!.message &&

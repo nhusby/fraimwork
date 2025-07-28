@@ -34,7 +34,7 @@ export function askAgent(
 
         return "No response received.";
       } catch (error) {
-        return `Error asking ${name}: ${error instanceof Error ? error.message : String(error)}`;
+        return `Error asking ${name}: ${error instanceof Error ? error.stack : String(error)}`;
       }
     },
   );

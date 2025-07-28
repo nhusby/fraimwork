@@ -1,4 +1,4 @@
-import { findSymbol } from "@fraimwork/codetools";
+import {findSymbol, typeCheck} from "@fraimwork/codetools";
 import { Agent } from "@fraimwork/core";
 import {
   deleteFile,
@@ -15,8 +15,7 @@ export class JrDevAgent extends Agent {
   public readonly systemPrompt = `You are a TypeScript programming agent.  Your job is to edit and write code as instructed.
 
   ## Programming Approach
-  1. Review the provided code index to identify relevant files
-  2. Read all relevant files with ReadFile or ReadManyFiles before making conclusions
+  1. Read all relevant files with ReadFile or ReadManyFiles before making conclusions
   3. Only use functions/methods you've confirmed exist
 
   ## Tool Usage
@@ -66,5 +65,6 @@ export class JrDevAgent extends Agent {
     findAndReplace(),
     renameFile(),
     deleteFile(),
+    typeCheck(),
   ];
 }
