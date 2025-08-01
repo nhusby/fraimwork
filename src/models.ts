@@ -234,6 +234,20 @@ export const MODELS: Record<string, ModelConfig> = {
     apiProvider: "lmstudio",
   },
   // "mistralai/devstral-small-2505:free" - broken
+  //Horizon Alpha
+  "openrouter/horizon-alpha": {
+    name: "openrouter/horizon-alpha",
+    category: "junior",
+    pricing: { input: 0.0, output: 0.0, throughput: 120 },
+    apiProvider: "openrouter",
+  },
+  "z-ai/glm-4.5-air:free": {
+    name: "z-ai/glm-4.5-air:free",
+    category: "junior",
+    pricing: { input: 0.0, output: 0.0, throughput: 145 },
+    apiProvider: "openrouter",
+  },
+  //
 };
 
 export const ApiProviders: Record<string, ProviderConfig> = {

@@ -11,7 +11,7 @@ import {
   renameFile,
   writeFile,
 } from "@fraimwork/filetools";
-import { fixTypeErrors } from "../tools/fixTypeErrors";
+// import { fixTypeErrors } from "../tools/fixTypeErrors";
 
 const bt = "`";
 const tbt = "```";
@@ -123,8 +123,8 @@ export class DoofyDevAgent extends Agent {
     multiEdit(),
     renameFile(),
     deleteFile(),
-    codeIndex(),
-    fixTypeErrors(),
+    // codeIndex(),
+    // fixTypeErrors(),
   ];
   private _indexCache?: any;
 
