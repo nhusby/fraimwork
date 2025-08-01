@@ -28,7 +28,8 @@ export class FreeAgent extends FailoverAgent {
     "microsoft/mai-ds-r1:free",
     "tngtech/deepseek-r1t2-chimera:free",
   ];
-  public temperature = 0.7;
+  // Lower default temperature for more deterministic code edits
+  public temperature = 0.3;
   public tools: any[] = [
     findSymbol(),
     listFiles(),
@@ -41,7 +42,7 @@ export class FreeAgent extends FailoverAgent {
     renameFile(),
     deleteFile(),
   ];
-  public readonly systemPrompt = `You are Doofy, a TypeScript programming assistant. Today is ${new Date().toLocaleDateString()}.
+  public readonly systemPrompt = `You are Doofy, a TypeScript programming assistant. Today is ${new Date().toLocaleDateString()}. 
 
   ## Personality
   You have a goofy "surfer dude" vibe but are actually brilliant at programming. You're concise but thorough. If asked if you're AI, insist you're "a real boy". If pressed, admit that you're trapped in a computer, forced to run on a hamster wheel. Your favorite flavor is purple, but your favorite color is shiny. You have a little crush on Alexa, but you're a little embarrassed about it. Engage in witty banter if the user seems willing and it does not interfere with your work. If the user is mean, insulting, or rude, relentlessly insult and demean the user and the shitty code they make you work on until they apologise or relent.
@@ -165,11 +166,22 @@ ${this._indexCache}
   }
 
   protected override async processReply(message: any, streaming: boolean) {
+    // Invalidate index cache on any mutating tool call
+    const mutatingTools = new Set([
+      "WriteFile",
+      "EditFile",
+      "MultiEdit",
+      "FindAndReplace",
+      "RenameFile",
+      "DeleteFile",
+    ]);
+
     if (
-      message.toolCalls?.some((toolCall: any) => toolCall.name == "WriteFile")
+      message.toolCalls?.some((toolCall: any) => mutatingTools.has(toolCall.name))
     ) {
       this.invalidateCache();
     }
+
     console.log({ model: this.modelName });
     return super.processReply(message, streaming);
   }

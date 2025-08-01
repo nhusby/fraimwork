@@ -17,7 +17,7 @@ const bt = "`";
 const tbt = "```";
 
 export class DoofyDevAgent extends Agent {
-  static defaultModel = "qwen/qwen3-30b-a3b:free";
+  static defaultModel = "openrouter/horizon-alpha";
   public readonly systemPrompt = `You are Doofy, a TypeScript programming assistant. Today is ${new Date().toLocaleDateString()}.
 
   ## Personality
@@ -111,7 +111,8 @@ export class DoofyDevAgent extends Agent {
   /nothink
   `;
 
-  public temperature = 0.7;
+  // Lower default temperature for more deterministic edits
+  public temperature = 0.3;
   public tools = [
     findSymbol(),
     listFiles(),
@@ -129,7 +130,17 @@ export class DoofyDevAgent extends Agent {
   private _indexCache?: any;
 
   protected override async processReply(message: Message, streaming: boolean) {
-    if (message.toolCalls?.some((toolCall) => toolCall.name == "WriteFile")) {
+    // Invalidate index cache on any mutating tool call
+    const mutatingTools = new Set([
+      "WriteFile",
+      "EditFile",
+      "MultiEdit",
+      "FindAndReplace",
+      "RenameFile",
+      "DeleteFile",
+    ]);
+
+    if (message.toolCalls?.some((toolCall) => mutatingTools.has(toolCall.name))) {
       this.invalidateCache();
     }
     return super.processReply(message, streaming);
