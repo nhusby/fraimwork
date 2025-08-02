@@ -1,16 +1,9 @@
 import { Message, Tool, estimateTokens } from "@fraimwork/core";
 import * as readline from "readline";
-import { AgentFactory } from "./lib/AgentFactory";
-import { DoofyDevAgent } from "./agents/DoofyDevAgent";
-import { MODELS } from "./models";
+import { AgentFactory } from "./lib/AgentFactory.ts";
+import { DoofyDevAgent } from "./agents/DoofyDevAgent.ts";
 
-// Default to a mid-level engineer model
-const modelKey: string = "deepseek/deepseek-chat-v3-0324:free";
-const config = {
-  streaming: modelKey !== "inception/mercury-coder",
-  modelKey: modelKey,
-};
-let agent = AgentFactory.getAgent(DoofyDevAgent, config.modelKey);
+let agent = AgentFactory.getAgent(DoofyDevAgent);
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -18,13 +11,22 @@ const rl = readline.createInterface({
 });
 
 async function interactiveCLI() {
-  console.log("DoofyDev Agent CLI");
-  console.log(
-    "Type 'exit' to quit, 'clear' to clear history, or 'help' for commands\n",
-  );
-  console.log(
-    `Streaming mode is ${config.streaming ? "enabled" : "disabled"}\n`,
-  );
+  const splashScreen = `
+[38;5;46m [38;5;46m [38;5;46m [38;5;46m [38;5;46m_[38;5;46m_[38;5;46m_[38;5;83m_[38;5;83m [38;5;83m [38;5;83m [38;5;83m [38;5;83m [38;5;120m [38;5;120m [38;5;120m [38;5;120m [38;5;120m [38;5;120m [38;5;120m [38;5;120m [38;5;120m [38;5;120m_[38;5;83m_[38;5;83m_[38;5;83m_[38;5;83m [38;5;83m [38;5;83m [38;5;46m [38;5;46m [38;5;46m [38;5;46m [38;5;46m [38;5;46m [38;5;46m [0m        ,__
+[38;5;46m [38;5;46m [38;5;46m [38;5;46m/[38;5;46m [38;5;46m_[38;5;83m_[38;5;83m [38;5;83m\\[38;5;83m_[38;5;83m_[38;5;83m_[38;5;120m_[38;5;120m [38;5;120m [38;5;120m_[38;5;120m_[38;5;120m_[38;5;120m_[38;5;120m [38;5;120m [38;5;120m/[38;5;83m [38;5;83m_[38;5;83m_[38;5;83m/[38;5;83m_[38;5;83m [38;5;46m [38;5;46m_[38;5;46m_[38;5;46m [38;5;46m [38;5;46m [38;5;46m [38;5;46m [0m       /   \`\\
+[38;5;46m [38;5;46m [38;5;46m/[38;5;46m [38;5;46m/[38;5;83m [38;5;83m/[38;5;83m [38;5;83m/[38;5;83m [38;5;83m_[38;5;120m_[38;5;120m [38;5;120m\\[38;5;120m/[38;5;120m [38;5;120m_[38;5;120m_[38;5;120m [38;5;120m\\[38;5;120m/[38;5;83m [38;5;83m/[38;5;83m_[38;5;83m/[38;5;83m [38;5;83m/[38;5;46m [38;5;46m/[38;5;46m [38;5;46m/[38;5;46m [38;5;46m [38;5;46m [38;5;46m [38;5;46m [0m      / ,^\\ |
+[38;5;46m [38;5;46m/[38;5;46m [38;5;46m/[38;5;83m_[38;5;83m/[38;5;83m [38;5;83m/[38;5;83m [38;5;83m/[38;5;120m_[38;5;120m/[38;5;120m [38;5;120m/[38;5;120m [38;5;120m/[38;5;120m_[38;5;120m/[38;5;120m [38;5;120m/[38;5;83m [38;5;83m_[38;5;83m_[38;5;83m/[38;5;83m [38;5;83m/[38;5;46m_[38;5;46m/[38;5;46m [38;5;46m/[38;5;46m [38;5;46m [38;5;46m [38;5;46m [38;5;46m [38;5;46m [0m     / /  / /
+[38;5;46m/[38;5;46m_[38;5;46m_[38;5;83m_[38;5;83m_[38;5;83m_[38;5;83m/[38;5;83m\\[38;5;83m_[38;5;120m_[38;5;120m_[38;5;120m_[38;5;120m/[38;5;120m\\[38;5;120m_[38;5;120m_[38;5;120m_[38;5;120m_[38;5;120m/[38;5;83m_[38;5;83m/[38;5;83m [38;5;83m [38;5;83m\\[38;5;83m_[38;5;46m_[38;5;46m,[38;5;46m [38;5;46m/[38;5;46m [38;5;46m [38;5;46m [38;5;46m [38;5;46m [38;5;46m [38;5;46m [0m    / /  / /
+ [38;5;46m [38;5;46m [38;5;83m [38;5;83m [38;5;83m [38;5;83m [38;5;83m [38;5;83m [38;5;120m [38;5;120m [38;5;120m [38;5;120m [38;5;120m [38;5;120m [38;5;120m [38;5;120m [38;5;120m/[38;5;120m [38;5;83m_[38;5;83m_[38;5;83m [38;5;83m\\[38;5;83m_[38;5;46m_[38;5;46m_[38;5;46m_[38;5;46m/[38;5;46m [38;5;46m [38;5;46m [38;5;46m_[38;5;46m_[38;5;46m [38;5;46m [38;5;46m [38;5;46m [0m  / /  / /
+ [38;5;46m [38;5;83m [38;5;83m [38;5;83m [38;5;83m [38;5;83m [38;5;83m [38;5;120m [38;5;120m [38;5;120m [38;5;120m [38;5;120m [38;5;120m [38;5;120m [38;5;120m [38;5;120m/[38;5;120m [38;5;83m/[38;5;83m [38;5;83m/[38;5;83m [38;5;83m/[38;5;83m [38;5;46m_[38;5;46m [38;5;46m\\[38;5;46m [38;5;46m|[38;5;46m [38;5;46m/[38;5;46m [38;5;46m/[38;5;46m [38;5;46m [38;5;46m [38;5;46m [0m / /  / /
+ [38;5;83m [38;5;83m [38;5;83m [38;5;83m [38;5;83m [38;5;83m [38;5;120m [38;5;120m [38;5;120m [38;5;120m [38;5;120m [38;5;120m [38;5;120m [38;5;120m [38;5;120m/[38;5;120m [38;5;83m/[38;5;83m_[38;5;83m/[38;5;83m [38;5;83m/[38;5;83m [38;5;46m [38;5;46m_[38;5;46m_[38;5;46m/[38;5;46m [38;5;46m|[38;5;46m/[38;5;46m [38;5;46m/[38;5;46m [38;5;46m [38;5;46m [38;5;46m [38;5;46m [0m/    / /
+ [38;5;83m [38;5;83m [38;5;83m [38;5;83m [38;5;83m [38;5;120m [38;5;120m [38;5;120m [38;5;120m [38;5;120m [38;5;120m [38;5;120m [38;5;120m [38;5;120m/[38;5;120m_[38;5;83m_[38;5;83m_[38;5;83m_[38;5;83m_[38;5;83m/[38;5;83m\\[38;5;46m_[38;5;46m_[38;5;46m_[38;5;46m/[38;5;46m|[38;5;46m_[38;5;46m_[38;5;46m_[38;5;46m/[38;5;46m [38;5;46m [38;5;46m [38;5;46m [38;5;46m [38;5;46m [0m\\._,/
+ 
+He's here to help! (But maybe he shouldn't...)
+
+How can Doofy "help" you today?
+`;
+  console.log( splashScreen );
 
   while (true) {
     try {
@@ -37,46 +39,34 @@ async function interactiveCLI() {
 
       if (userInput.trim() === "") continue;
 
-      console.log("\nDoofyDev: ");
+      agent.on("chunk", (chunk: string) => {
+        if (
+          !chunk.includes("<tool-calls>") &&
+          !chunk.includes("</tool-calls>")
+        ) {
+          process.stdout.write(chunk);
+        }
+      });
 
-      if (config.streaming) {
-        // Event-driven streaming mode
-        agent.on("chunk", (chunk: string) => {
-          if (
-            !chunk.includes("<tool-calls>") &&
-            !chunk.includes("</tool-calls>")
-          ) {
-            process.stdout.write(chunk);
-          }
-        });
+      agent.on("toolCall", (toolCall: any) => {
+        process.stdout.write(`[ Tool: ${toolCall.name} ]\n`);
+      });
 
-        agent.on("toolCall", (toolCall: any) => {
-          process.stdout.write(`[ Tool: ${toolCall.name} ]\n`);
-        });
+      agent.on("error", (error: Error) => {
+        console.error("\nError:", error.message);
+      });
 
-        agent.on("error", (error: Error) => {
-          console.error("\nError:", error.message);
-        });
+      agent.on("complete", () => {
+        process.stdout.write("\n");
+      });
 
-        agent.on("complete", () => {
-          process.stdout.write("\n");
-        });
+      await agent.send(new Message("user", userInput), true);
 
-        await agent.send(new Message("user", userInput), true);
-
-        // Clean up listeners
-        agent.removeAllListeners("chunk");
-        agent.removeAllListeners("toolCall");
-        agent.removeAllListeners("error");
-        agent.removeAllListeners("complete");
-      } else {
-        // Non-streaming mode
-        const response = await agent.send(
-          new Message("user", userInput),
-          false,
-        );
-        console.log(response.content);
-      }
+      // Clean up listeners
+      agent.removeAllListeners("chunk");
+      agent.removeAllListeners("toolCall");
+      agent.removeAllListeners("error");
+      agent.removeAllListeners("complete");
 
       console.log("\n");
     } catch (error) {
@@ -91,7 +81,7 @@ async function interactiveCLI() {
 async function handleCommand(userInput: string) {
   const [commandName, ...args] = userInput.slice(1).split(" ");
 
-  switch (commandName.toLowerCase()) {
+  switch (commandName!.toLowerCase()) {
     case "exit":
       console.log("Goodbye!");
       process.exit(0); // Exit the process
@@ -99,75 +89,6 @@ async function handleCommand(userInput: string) {
       (agent as any).history = [];
       console.clear();
       console.log("History cleared!\n");
-      return;
-    case "stream":
-    case "streaming":
-      config.streaming = !config.streaming;
-      console.log(
-        `Streaming mode is now ${config.streaming ? "enabled" : "disabled"}`,
-      );
-      return;
-    case "model":
-      if (args.length === 0) {
-        // List available models
-        console.log("\nAvailable Models:");
-
-        console.log("\nSr. Engineer/Architect:");
-        Object.entries(MODELS)
-          .filter(([_, model]) => model.category === "senior")
-          .forEach(([key, model]) => {
-            console.log(
-              `  ${model.name} - Input: $${model.pricing?.input.toFixed(2)}, Output: $${model.pricing?.output.toFixed(2)}, TPS: ${model.pricing?.throughput}`,
-            );
-          });
-
-        console.log("\nMid-level Engineer:");
-        Object.entries(MODELS)
-          .filter(([_, model]) => model.category === "mid")
-          .forEach(([key, model]) => {
-            console.log(
-              `  ${model.name} - Input: $${model.pricing?.input.toFixed(2)}, Output: $${model.pricing?.output.toFixed(2)}, TPS: ${model.pricing?.throughput}`,
-            );
-          });
-
-        console.log("\nJr. Engineer:");
-        Object.entries(MODELS)
-          .filter(([_, model]) => model.category === "junior")
-          .forEach(([key, model]) => {
-            console.log(
-              `  ${model.name} - Input: $${model.pricing?.input.toFixed(2)}, Output: $${model.pricing?.output.toFixed(2)}, TPS: ${model.pricing?.throughput}`,
-            );
-          });
-
-        console.log(`\nCurrent model: ${config.modelKey}`);
-      } else {
-        // Set model
-        const newModelKey = args.join(" ");
-        if (MODELS[newModelKey]) {
-          config.modelKey = newModelKey;
-          config.streaming = newModelKey !== "inception/mercury-coder";
-          console.log(`Model set to: ${newModelKey}`);
-          console.log(
-            `Streaming mode is ${config.streaming ? "enabled" : "disabled"}`,
-          );
-
-          // Recreate the agent with the new model
-          const newAgent = AgentFactory.getAgent(
-            DoofyDevAgent,
-            config.modelKey,
-          );
-          if (newAgent) {
-            // Transfer history if possible
-            if ((agent as any).history && (newAgent as any).history) {
-              (newAgent as any).history = (agent as any).history;
-            }
-            agent = newAgent;
-          }
-        } else {
-          console.log(`Model not found: ${newModelKey}`);
-          console.log("Use '/model' to see available models");
-        }
-      }
       return;
     case "help":
       showHelp();
@@ -180,7 +101,7 @@ async function handleCommand(userInput: string) {
     try {
       const params: Record<string, any> = {};
       for (let i = 0; i < args.length; i++) {
-        const arg = args[i];
+        const arg = args[i]!;
         if (arg.startsWith("--")) {
           const key = arg.slice(2);
           const value = args[i + 1];
@@ -206,7 +127,7 @@ async function handleCommand(userInput: string) {
       ) {
         const toolParams = Object.keys(tool.parameters);
         if (toolParams.length === 1) {
-          params[toolParams[0]] = args.join(" ");
+          params[toolParams[0]!] = args.join(" ");
         }
       }
 
@@ -235,8 +156,6 @@ function showHelp() {
 Available Commands:
   help     - Show this help message
   clear    - Clear conversation history
-  stream   - Toggle streaming mode (currently ${config.streaming ? "enabled" : "disabled"})
-  model    - List available models or change model (e.g., /model or /model google/gemini-2.5-pro)
   exit     - Exit the CLI
 
 Slash Commands (Tools):`);
@@ -271,17 +190,6 @@ Example prompts:
 }
 
 async function main() {
-  const args = process.argv.slice(2);
-
-  // Process command line arguments
-  for (const arg of args) {
-    if (arg === "--no-stream" || arg === "--no-streaming") {
-      config.streaming = false;
-    } else if (arg === "--stream" || arg === "--streaming") {
-      config.streaming = true;
-    }
-  }
-
   await interactiveCLI();
 }
 
