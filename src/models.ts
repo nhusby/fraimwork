@@ -4,6 +4,7 @@ import * as process from "node:process";
 
 export interface ModelConfig {
   name: string;
+  slug?: string;
   providers?: string[];
   contextSize?: number;
   capabilities?: string[];
@@ -43,6 +44,7 @@ export const MODELS: Record<string, ModelConfig> = {
   },
   "moonshotai/kimi-k2:free": {
     name: "moonshotai/kimi-k2",
+    slug: "moonshotai/kimi-k2",
     providers: ["chutes/fp8"],
     category: "senior",
     pricing: { input: 0, output: 0, throughput: 70 },
@@ -50,6 +52,7 @@ export const MODELS: Record<string, ModelConfig> = {
   },
   "moonshotai/kimi-k2": {
     name: "moonshotai/kimi-k2",
+    slug: "moonshotai/kimi-k2",
     providers: ["chutes/fp8", "targon/fp8", "baseten/fp8"],
     category: "senior",
     pricing: { input: 1.5, output: 4.0, throughput: 40 },
@@ -64,6 +67,7 @@ export const MODELS: Record<string, ModelConfig> = {
   },
   "qwen/qwen3-coder:free": {
     name: "qwen/qwen3-coder:free",
+    slug: "qwen/qwen3-coder-480b-a35b-07-25",
     // providers: ["chutes/fp8"],
     category: "senior",
     pricing: { input: 0, output: 0, throughput: 35 },
@@ -103,6 +107,7 @@ export const MODELS: Record<string, ModelConfig> = {
   // rate limited
   "google/gemini-2.0-flash-exp:free": {
     name: "google/gemini-2.0-flash-exp:free",
+    slug: "google/gemini-2.0-flash-exp",
     category: "mid",
     pricing: { input: 0.0, output: 0.0, throughput: 165 },
     apiProvider: "openrouter",
@@ -165,6 +170,7 @@ export const MODELS: Record<string, ModelConfig> = {
   "moonshotai/kimi-dev-72b:free": {
     // funky think tags
     name: "moonshotai/kimi-dev-72b:free",
+    slug: "moonshotai/kimi-dev-72b",
     category: "mid",
     pricing: { input: 0.0, output: 0.0, throughput: 45 },
     apiProvider: "openrouter",
@@ -200,6 +206,7 @@ export const MODELS: Record<string, ModelConfig> = {
   "qwen/qwen3-30b-a3b:free": {
     // successfully added todos with EditFile
     name: "qwen/qwen3-30b-a3b:free",
+    slug: "qwen/qwen3-30b-a3b-04-28",
     providers: ["chutes"],
     category: "junior",
     pricing: { input: 0.08, output: 0.29, throughput: 140 },
@@ -209,6 +216,7 @@ export const MODELS: Record<string, ModelConfig> = {
   "qwen/qwen3-14b:free": {
     // successfully added todos with EditFile
     name: "qwen/qwen3-30b-a3b:free",
+    slug: "qwen/qwen3-14b-04-28",
     providers: ["chutes"],
     category: "junior",
     pricing: { input: 0.08, output: 0.29, throughput: 70 },
@@ -237,17 +245,25 @@ export const MODELS: Record<string, ModelConfig> = {
   //Horizon Alpha
   "openrouter/horizon-alpha": {
     name: "openrouter/horizon-alpha",
+    slug: "openrouter/horizon-alpha",
     category: "junior",
     pricing: { input: 0.0, output: 0.0, throughput: 120 },
     apiProvider: "openrouter",
   },
   "z-ai/glm-4.5-air:free": {
     name: "z-ai/glm-4.5-air:free",
+    slug: "z-ai/glm-4.5-air",
     category: "junior",
     pricing: { input: 0.0, output: 0.0, throughput: 145 },
     apiProvider: "openrouter",
   },
-  //
+  "qwen3-coder-30b-a3b-instruct": {
+    name: "qwen3-coder-30b-a3b-instruct",
+    category: "junior",
+    pricing: { input: 0.0, output: 0.0, throughput: 30 },
+    apiProvider: "lmstudio-ryzenrig",
+    parseToolCalls: true,
+  },
 };
 
 export const ApiProviders: Record<string, ProviderConfig> = {
@@ -264,6 +280,11 @@ export const ApiProviders: Record<string, ProviderConfig> = {
   lmstudio: {
     name: "LM Studio",
     baseURL: "http://localhost:1234/v1",
+    apiKey: "lm-studio",
+  },
+  "lmstudio-ryzenrig": {
+    name: "LM Studio",
+    baseURL: "http://ryzenrig:1234/v1",
     apiKey: "lm-studio",
   },
   // Add more providers as needed
