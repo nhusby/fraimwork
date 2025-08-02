@@ -262,7 +262,14 @@ export const MODELS: Record<string, ModelConfig> = {
     category: "junior",
     pricing: { input: 0.0, output: 0.0, throughput: 30 },
     apiProvider: "lmstudio-ryzenrig",
-    // parseToolCalls: true,
+    parseToolCalls: true,
+  },
+  "qwen3-30b-a3b-128k@q2_k_l": {
+    name: "qwen3-30b-a3b-128k@q2_k_l",
+    category: "junior",
+    pricing: { input: 0.0, output: 0.0, throughput: 30 },
+    apiProvider: "lmstudio-ryzenrig",
+    parseToolCalls: true,
   },
 };
 

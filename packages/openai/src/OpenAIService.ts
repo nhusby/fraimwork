@@ -1,6 +1,6 @@
 import { EventEmitter } from "node:events";
 import OpenAI, { ClientOptions } from "openai";
-import type { ChatCompletionCreateParamsStreaming } from "openai/resources";
+import type { ChatCompletionCreateParamsStreaming, ChatCompletionCreateParamsNonStreaming } from "openai/resources";
 import {
   d,
   estimateTokens,
@@ -95,24 +95,7 @@ export class OpenAIService extends LLMService {
     reject: (reason?: any) => void,
   ) {
     try {
-      const response = await this.client.chat.completions.create({
-        model: params.model,
-        // @ts-ignore
-        messages: convertMessagesToOpenApi(params.messages),
-        // @ts-ignore
-        tools: params.parseToolCalls
-          ? undefined
-          : params.tools?.map((tool) => ({
-              type: "function" as const,
-              function: {
-                name: tool.name,
-                description: tool.description,
-                parameters: tool.parameters as any,
-              },
-            })),
-        temperature: params.temperature,
-        max_completion_tokens: params.maxTokens,
-      });
+      const response = await this.client.chat.completions.create(params as any as ChatCompletionCreateParamsNonStreaming,);
 
       if("error" in response){
         // @ts-ignore
@@ -236,7 +219,7 @@ export class OpenAIService extends LLMService {
                 toolCall.args = toolCall.tempArgs
                   ? // TODO: should this be parsed here?
                     typeof toolCall.tempArgs == "string"
-                    ? JSON.parse(<string>toolCall.tempArgs)
+                    ? parseToolCallArgs(<string>toolCall.tempArgs)
                     : toolCall.tempArgs
                   : {};
                 emitter.emit("toolCall", toolCall);
@@ -283,4 +266,37 @@ export function convertMessagesToOpenApi(
         : undefined,
     tool_call_id: ("toolCallId" in message ? message.toolCallId : undefined)!,
   }));
+}
+
+/**
+ * Parses tool call arguments from either JSON or XML format
+ * @param args String containing tool call arguments
+ * @returns Parsed object with parameter values
+ */
+function parseToolCallArgs(args: string): any {
+  // Try parsing as JSON first
+  try {
+    return JSON.parse(args);
+  } catch (e) {
+    // If JSON parsing fails, try XML format
+    const result: Record<string, string> = {};
+    
+    // Match XML pattern: <parameter=name>value</parameter>
+    const regex = /<parameter=([^>]+)>(.*?)<\/parameter>/g;
+    let match;
+    
+    while ((match = regex.exec(args)) !== null) {
+      const paramName = match[1]!;
+      const paramValue = match[2]!;
+      result[paramName] = paramValue;
+    }
+    
+    // If we found any parameters, return the result object
+    if (Object.keys(result).length > 0) {
+      return result;
+    }
+    
+    // If no XML parameters were found, rethrow the original JSON parse error
+    throw e;
+  }
 }

@@ -177,11 +177,7 @@ DoofyDev can help you with:
 
 Example prompts:
   "Show me the structure of this project"
-  "Find all TypeScript files in the src directory"
-  "Read the contents of package.json"
-  "Create a new utility function for string manipulation"
   "Where is the Agent class defined?"
-
 `);
 }
 

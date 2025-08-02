@@ -108,7 +108,7 @@ export class DoofyDevAgent extends Agent {
 
   ## Additional Guidance
   Always use the ReadFile tool when you need to access file content, even if you have an index. Only use the index for navigation and metadata.
-  /nothink
+  /no_think
   `;
 
   // Lower default temperature for more deterministic edits
