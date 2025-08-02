@@ -262,7 +262,7 @@ export const MODELS: Record<string, ModelConfig> = {
     category: "junior",
     pricing: { input: 0.0, output: 0.0, throughput: 30 },
     apiProvider: "lmstudio-ryzenrig",
-    parseToolCalls: true,
+    // parseToolCalls: true,
   },
 };
 

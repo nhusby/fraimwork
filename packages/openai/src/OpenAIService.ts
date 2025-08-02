@@ -241,8 +241,8 @@ export class OpenAIService extends LLMService {
                   : {};
                 emitter.emit("toolCall", toolCall);
               } catch (e) {
-                console.error("Error parsing tool call:", e);
                 emitter.emit("error", e);
+                console.log(toolCall)
               }
             }
           }

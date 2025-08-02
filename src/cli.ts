@@ -48,10 +48,6 @@ How can Doofy "help" you today?
         }
       });
 
-      agent.on("toolCall", (toolCall: any) => {
-        process.stdout.write(`[ Tool: ${toolCall.name} ]\n`);
-      });
-
       agent.on("error", (error: Error) => {
         console.error("\nError:", error.message);
       });
