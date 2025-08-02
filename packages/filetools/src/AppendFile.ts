@@ -1,4 +1,4 @@
-import { Tool } from "@fraimwork/core";
+import { Tool, validatePath } from "@fraimwork/core";
 import * as fs from "fs/promises";
 
 /**
@@ -27,7 +27,8 @@ export function appendFile(): Tool {
         content: string;
       };
       try {
-        await fs.appendFile(filePath, content, "utf-8");
+        const validatedPath = await validatePath(filePath);
+        await fs.appendFile(validatedPath, content, "utf-8");
         return `Content appended to ${filePath} successfully`;
       } catch (error: any) {
         return `Error appending to file: ${error.message}`;

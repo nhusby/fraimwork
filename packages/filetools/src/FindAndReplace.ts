@@ -1,5 +1,5 @@
 import * as fs from "fs/promises";
-import { Tool } from "@fraimwork/core";
+import { Tool, validatePaths } from "@fraimwork/core";
 
 /**
  * Find and replace text across multiple files
@@ -39,12 +39,18 @@ export function findAndReplace(): Tool {
       };
 
       try {
+        // Validate that all file paths are within the working directory
+        const validatedPaths = await validatePaths(files);
+        
         const results: string[] = [];
         let totalReplacements = 0;
 
-        for (const filePath of files) {
+        for (let i = 0; i < validatedPaths.length; i++) {
+          const filePath = files[i]; // Use original path for user-facing messages
+          const validatedPath = validatedPaths[i]!; // Use validated path for operations
+          
           try {
-            const currentContent = await fs.readFile(filePath, "utf-8");
+            const currentContent = await fs.readFile(validatedPath, "utf-8");
             const normalizedContent = currentContent.replace(/\r\n/g, "\n");
 
             // Count occurrences
@@ -63,7 +69,7 @@ export function findAndReplace(): Tool {
                 oldString,
                 newString,
               );
-              await fs.writeFile(filePath, newContent, "utf-8");
+              await fs.writeFile(validatedPath, newContent, "utf-8");
               results.push(
                 `${filePath}: ${occurrences} replacement${occurrences === 1 ? "" : "s"}`,
               );

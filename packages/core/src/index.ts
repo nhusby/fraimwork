@@ -7,3 +7,4 @@ export * from "./Tool.ts";
 export * from "./ToolCall.ts";
 export * from "./ToolMessage.ts";
 export * from "./utils.ts";
+export * from "./pathUtils.ts";

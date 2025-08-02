@@ -1,4 +1,4 @@
-import { Tool } from "@fraimwork/core";
+import { Tool, validatePath } from "@fraimwork/core";
 import * as fs from "fs/promises";
 
 /**
@@ -28,16 +28,18 @@ export function deleteFile(): Tool {
         recursive?: boolean;
       };
       try {
-        const stats = await fs.stat(filePath);
+        // Validate that the file path is within the working directory
+        const validatedPath = await validatePath(filePath);
+        const stats = await fs.stat(validatedPath);
 
         if (stats.isDirectory()) {
-          await fs.rm(filePath, {
+          await fs.rm(validatedPath, {
             recursive: recursive ?? false,
             force: true,
           });
           return `Directory ${filePath} deleted successfully`;
         } else {
-          await fs.unlink(filePath);
+          await fs.unlink(validatedPath);
           return `File ${filePath} deleted successfully`;
         }
       } catch (error: any) {

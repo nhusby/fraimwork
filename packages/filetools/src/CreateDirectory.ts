@@ -1,4 +1,4 @@
-import { Tool } from "@fraimwork/core";
+import { Tool, validatePath } from "@fraimwork/core";
 import * as fs from "fs/promises";
 
 /**
@@ -20,7 +20,9 @@ export function createDirectory(): Tool {
     async (args: Record<string, any>) => {
       const { path: dirPath } = args as { path: string };
       try {
-        await fs.mkdir(dirPath, { recursive: true });
+        // Validate that the directory path is within the working directory
+        const validatedPath = await validatePath(dirPath);
+        await fs.mkdir(validatedPath, { recursive: true });
         return `Directory ${dirPath} created successfully`;
       } catch (error: any) {
         return `Error creating directory: ${error.message}`;

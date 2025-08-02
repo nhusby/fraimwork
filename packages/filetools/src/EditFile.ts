@@ -1,6 +1,6 @@
 import * as fs from "fs/promises";
 import * as path from "path";
-import { Tool } from "@fraimwork/core";
+import { Tool, validatePath } from "@fraimwork/core";
 
 /**
  * Edit a single file with fenced context validation
@@ -41,12 +41,15 @@ export function editFile(): Tool {
       };
 
       try {
+        // Validate that the file path is within the working directory
+        const validatedPath = await validatePath(filePath);
+        
         let currentContent: string;
         let isNewFile = false;
 
         // Check if file exists and read content
         try {
-          currentContent = await fs.readFile(filePath, "utf-8");
+          currentContent = await fs.readFile(validatedPath, "utf-8");
           // Normalize line endings to LF for consistent processing
           currentContent = currentContent.replace(/\r\n/g, "\n");
         } catch (error: any) {
@@ -67,10 +70,10 @@ export function editFile(): Tool {
         // Handle new file creation
         if (isNewFile) {
           // Ensure the directory exists
-          const dir = path.dirname(filePath);
+          const dir = path.dirname(validatedPath);
           await fs.mkdir(dir, { recursive: true });
 
-          await fs.writeFile(filePath, newString, "utf-8");
+          await fs.writeFile(validatedPath, newString, "utf-8");
           return `Created new file: ${filePath}`;
         }
 
@@ -123,11 +126,11 @@ export function editFile(): Tool {
         const newContent = currentContent.replace(oldString, newString);
 
         // Ensure the directory exists
-        const dir = path.dirname(filePath);
+        const dir = path.dirname(validatedPath);
         await fs.mkdir(dir, { recursive: true });
 
         // Write the modified content
-        await fs.writeFile(filePath, newContent, "utf-8");
+        await fs.writeFile(validatedPath, newContent, "utf-8");
 
         return `Successfully modified file: ${filePath} (1 replacement)`;
       } catch (error: any) {

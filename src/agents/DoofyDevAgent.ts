@@ -17,7 +17,7 @@ const bt = "`";
 const tbt = "```";
 
 export class DoofyDevAgent extends Agent {
-  static defaultModel = "openrouter/horizon-alpha";
+  static defaultModel = "qwen3-coder-30b-a3b-instruct";
   public readonly systemPrompt = `You are Doofy, a TypeScript programming assistant. Today is ${new Date().toLocaleDateString()}.
 
   ## Personality

@@ -1,4 +1,4 @@
-import { Tool } from "@fraimwork/core";
+import { Tool, validatePath } from "@fraimwork/core";
 import * as fs from "fs/promises";
 import * as path from "path";
 
@@ -29,11 +29,14 @@ export function writeFile(): Tool {
         content: string;
       };
       try {
+        // Validate that the file path is within the working directory
+        const validatedPath = await validatePath(filePath);
+        
         // Ensure the directory exists
-        const dir = path.dirname(filePath);
+        const dir = path.dirname(validatedPath);
         await fs.mkdir(dir, { recursive: true });
 
-        await fs.writeFile(filePath, content, "utf-8");
+        await fs.writeFile(validatedPath, content, "utf-8");
         return `File ${filePath} written successfully`;
       } catch (error: any) {
         return `Error writing file: ${error.message}`;

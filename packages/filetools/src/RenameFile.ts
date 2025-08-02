@@ -1,4 +1,4 @@
-import { Tool } from "@fraimwork/core";
+import { Tool, validatePath } from "@fraimwork/core";
 import * as fs from "fs/promises";
 import * as path from "path";
 
@@ -28,11 +28,15 @@ export function renameFile(): Tool {
         newPath: string;
       };
       try {
+        // Validate that both paths are within the working directory
+        const validatedOldPath = await validatePath(oldPath);
+        const validatedNewPath = await validatePath(newPath);
+        
         // Ensure the target directory exists
-        const targetDir = path.dirname(newPath);
+        const targetDir = path.dirname(validatedNewPath);
         await fs.mkdir(targetDir, { recursive: true });
 
-        await fs.rename(oldPath, newPath);
+        await fs.rename(validatedOldPath, validatedNewPath);
         return `Renamed ${oldPath} to ${newPath} successfully`;
       } catch (error: any) {
         return `Error renaming file/directory: ${error.message}`;
