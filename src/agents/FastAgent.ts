@@ -21,7 +21,7 @@ const tokenWeight = 4000;
 
 export class FastAgent extends FailoverAgent {
   public static modelNames: string[] = [
-    "z-ai/glm-4.5-air:free",
+    // "z-ai/glm-4.5-air:free",
     "openrouter/horizon-beta",
     "openrouter/horizon-alpha",
     "google/gemini-2.0-flash-exp:free",

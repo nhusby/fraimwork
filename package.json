@@ -4,6 +4,9 @@
   "description": "",
   "main": "index.js",
   "private": true,
+  "bin": {
+    "doofydev": "./bin/doofydev"
+  },
   "workspaces": [
     "packages/*"
   ],
