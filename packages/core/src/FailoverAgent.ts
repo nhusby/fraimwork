@@ -24,7 +24,7 @@ export abstract class FailoverAgent extends Agent {
     this.initializeModels(modelConfigs);
   }
 
-  private initializeModels(modelConfigs: ModelConfig[]): void {
+  protected initializeModels(modelConfigs: ModelConfig[]): void {
     this.models = modelConfigs.map((config) => ({
       ...config,
       failureCount: 0,
@@ -35,7 +35,7 @@ export abstract class FailoverAgent extends Agent {
   /**
    * Rotate to the next model in the list
    */
-  private rotateToNextModel() {
+  protected rotateToNextModel() {
     const index = (this.models.indexOf(this.model) + 1) % this.models.length;
     this.model = this.models[index]!;
 
@@ -45,7 +45,7 @@ export abstract class FailoverAgent extends Agent {
   /**
    * Check if an error indicates a rate limit or quota issue
    */
-  private isRateLimitError(error: any): boolean {
+  protected isRateLimitError(error: any): boolean {
     if (!error) return false;
 
     const errorMessage = error.message?.toLowerCase() || "";
@@ -73,7 +73,7 @@ export abstract class FailoverAgent extends Agent {
   /**
    * Record a failure for the current model
    */
-  private recordModelFailure(error: any): void {
+  protected recordModelFailure(error: any): void {
     this.model.failureCount++;
     this.model.lastFailure = new Date();
     console.log(`❌ Model ${this.model.name} failed: ${error.message}`);

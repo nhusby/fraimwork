@@ -30,6 +30,7 @@ export const MODELS: Record<string, ModelConfig> = {
   // Sr.Engineer/Architect
   "anthropic/claude-sonnet-4": {
     name: "anthropic/claude-sonnet-4",
+    slug: "anthropic/claude-4-sonnet-20250522",
     providers: ["google-vertex", "google-vertex/global", "anthropic"],
     category: "senior",
     pricing: { input: 3.0, output: 15.0, throughput: 65 },
@@ -37,6 +38,7 @@ export const MODELS: Record<string, ModelConfig> = {
   },
   "google/gemini-2.5-pro": {
     name: "google/gemini-2.5-pro",
+    slug: "google/gemini-2.5-pro",
     providers: ["google-ai-studio"],
     category: "senior",
     pricing: { input: 1.25, output: 10.0, throughput: 85 },
@@ -77,6 +79,7 @@ export const MODELS: Record<string, ModelConfig> = {
   // Mid-level Engineer
   "google/gemini-2.5-flash": {
     name: "google/gemini-2.5-flash",
+    slug: "google/gemini-2.5-flash",
     providers: ["google-ai-studio"],
     category: "mid",
     pricing: { input: 0.3, output: 2.5, throughput: 200 },
@@ -84,6 +87,7 @@ export const MODELS: Record<string, ModelConfig> = {
   },
   "inception/mercury-coder": {
     name: "inception/mercury-coder",
+    slug: "inception/mercury-coder-small-beta",
     providers: ["openrouter"],
     category: "mid",
     pricing: { input: 0.25, output: 1.0, throughput: 1250 },
@@ -93,12 +97,14 @@ export const MODELS: Record<string, ModelConfig> = {
   },
   "qwen/qwen3-235b-a22b": {
     name: "qwen/qwen3-235b-a22b",
+    slug: "qwen/qwen3-235b-a22b-04-28",
     category: "mid",
     pricing: { input: 0.2, output: 0.6, throughput: 45 },
     apiProvider: "openrouter",
   },
   "google/gemini-2.5-flash-preview-05-20": {
     name: "google/gemini-2.5-flash-preview-05-20",
+    slug: "google/gemini-2.5-flash-lite-preview-06-17",
     providers: ["google-ai-studio"],
     category: "mid",
     pricing: { input: 0.15, output: 0.6, throughput: 80 },
@@ -114,6 +120,7 @@ export const MODELS: Record<string, ModelConfig> = {
   },
   "deepseek/deepseek-r1-0528:free": {
     name: "deepseek/deepseek-r1-0528:free",
+    slug: "deepseek/deepseek-r1-0528",
     category: "mid",
     pricing: { input: 0.0, output: 0.0, throughput: 45 },
     apiProvider: "openrouter",
@@ -123,6 +130,7 @@ export const MODELS: Record<string, ModelConfig> = {
   "tngtech/deepseek-r1t2-chimera:free": {
     // R1/V3 hybrid
     name: "tngtech/deepseek-r1t2-chimera:free",
+    slug: "tngtech/deepseek-r1t2-chimera",
     category: "mid",
     pricing: { input: 0.0, output: 0.0, throughput: 36 },
     apiProvider: "openrouter",
@@ -132,6 +140,7 @@ export const MODELS: Record<string, ModelConfig> = {
   "microsoft/mai-ds-r1:free": {
     // microsoft DeepSeek R1 variant (totally tubular bro)
     name: "microsoft/mai-ds-r1:free",
+    slug: "microsoft/mai-ds-r1",
     category: "mid",
     pricing: { input: 0.0, output: 0.0, throughput: 40 },
     apiProvider: "openrouter",
@@ -140,6 +149,7 @@ export const MODELS: Record<string, ModelConfig> = {
   "deepseek/deepseek-chat-v3-0324:free": {
     // ⭐
     name: "deepseek/deepseek-chat-v3-0324:free",
+    slug: "deepseek/deepseek-chat-v3-0324",
     providers: ["chutes/fp8"],
     category: "mid",
     pricing: { input: 0.0, output: 0.0, throughput: 45 },
@@ -155,6 +165,7 @@ export const MODELS: Record<string, ModelConfig> = {
   // },
   "qwen/qwen3-235b-a22b-07-25:free": {
     name: "qwen/qwen3-235b-a22b-07-25:free",
+    slug: "qwen/qwen3-235b-a22b-07-25",
     category: "mid",
     pricing: { input: 0.0, output: 0.0, throughput: 90 },
     apiProvider: "openrouter",
@@ -163,6 +174,7 @@ export const MODELS: Record<string, ModelConfig> = {
   "qwen/qwen3-235b-a22b:free": {
     // rate limited 1 rpm
     name: "qwen/qwen3-235b-a22b:free",
+    slug: "qwen/qwen3-235b-a22b-04-28",
     category: "mid",
     pricing: { input: 0.0, output: 0.0, throughput: 40 },
     apiProvider: "openrouter",
@@ -179,6 +191,7 @@ export const MODELS: Record<string, ModelConfig> = {
   "meta-llama/llama-3.3-70b-instruct:free": {
     // rate limited 1 rpm
     name: "meta-llama/llama-3.3-70b-instruct:free",
+    slug: "meta-llama/llama-3.3-70b-instruct",
     category: "mid",
     pricing: { input: 0.0, output: 0.0, throughput: 60 },
     providers: ["together/fp8"],
@@ -189,6 +202,7 @@ export const MODELS: Record<string, ModelConfig> = {
   "qwen/qwen3-32b:free": {
     // successfully added comments with EditFile
     name: "qwen/qwen3-32b:free",
+    slug: "qwen/qwen3-32b-04-28",
     providers: ["chutes"],
     category: "junior",
     pricing: { input: 0.08, output: 0.29, throughput: 140 },
@@ -198,6 +212,7 @@ export const MODELS: Record<string, ModelConfig> = {
   "qwen/qwen3-30b-a3b": {
     // successfully added todos with EditFile
     name: "qwen/qwen3-30b-a3b",
+    slug: "qwen/qwen3-30b-a3b-04-28",
     providers: ["parasail/fp8","deepinfra/fp8"],
     category: "junior",
     pricing: { input: 0.08, output: 0.29, throughput: 100 },
@@ -242,7 +257,6 @@ export const MODELS: Record<string, ModelConfig> = {
     apiProvider: "lmstudio",
   },
   // "mistralai/devstral-small-2505:free" - broken
-  //Horizon Alpha
   "openrouter/horizon-alpha": {
     name: "openrouter/horizon-alpha",
     slug: "openrouter/horizon-alpha",
@@ -256,6 +270,7 @@ export const MODELS: Record<string, ModelConfig> = {
     category: "junior",
     pricing: { input: 0.0, output: 0.0, throughput: 145 },
     apiProvider: "openrouter",
+    parseToolCalls: true,
   },
   "qwen3-coder-30b-a3b-instruct": {
     name: "qwen3-coder-30b-a3b-instruct",
@@ -326,6 +341,8 @@ export function createModelConfig(modelKey: string): FrameworkModelConfig {
     service,
     parseToolCalls: model.parseToolCalls,
     noStreaming: model.noStreaming,
+    // @ts-ignore
+    slug: model.slug
   };
 }
 
