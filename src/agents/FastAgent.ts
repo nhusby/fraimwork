@@ -23,7 +23,6 @@ export class FastAgent extends FailoverAgent {
   public static modelNames: string[] = [
     // "z-ai/glm-4.5-air:free",
     "openrouter/horizon-beta",
-    "openrouter/horizon-alpha",
     "google/gemini-2.0-flash-exp:free",
     "qwen/qwen3-30b-a3b:free",
   ];
@@ -175,48 +174,13 @@ export class FastAgent extends FailoverAgent {
       .sort((a, b) => (a.p50_latency + a.p50_throughput * tokenWeight) - b.p50_latency + b.p50_throughput * tokenWeight);
   }
 
-  private _indexCache?: any;
-  public invalidateCache(): void {
-    this._indexCache = null;
-  }
-
-  protected override async processMessage(
-    message: any,
-    context: any[],
-  ): Promise<any[]> {
-    // Use cached index if not invalidated
-    this._indexCache = this._indexCache ?? (await codeIndex().call({}));
-
-    context.unshift(
+  protected override async getHistoricalContext(): Promise<Message[]> {
+    return [
+      new Message("system", this.systemPrompt),
       new Message(
         "system",
         `This is the index for the current working directory:
-${this._indexCache}
-`,
-      ),
-    );
-
-    return super.processMessage(message, context);
-  }
-
-  protected override async processReply(message: any, streaming: boolean) {
-    // Invalidate index cache on any mutating tool call
-    const mutatingTools = new Set([
-      "WriteFile",
-      "EditFile",
-      "MultiEdit",
-      "FindAndReplace",
-      "RenameFile",
-      "DeleteFile",
-    ]);
-
-    if (
-      message.toolCalls?.some((toolCall: any) => mutatingTools.has(toolCall.name))
-    ) {
-      this.invalidateCache();
-    }
-
-    console.log({ model: this.modelName });
-    return super.processReply(message, streaming);
+${await codeIndex().call({})}
+`), ...this.history];
   }
 }

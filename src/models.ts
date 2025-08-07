@@ -67,6 +67,13 @@ export const MODELS: Record<string, ModelConfig> = {
     pricing: { input: 0, output: 0, throughput: 40 },
     apiProvider: "moonshot",
   },
+  "qwen/qwen3-coder": {
+    name: "qwen/qwen3-coder",
+    providers: ["baseten/fp8"],
+    category: "senior",
+    pricing: { input: 0, output: 0, throughput: 35 },
+    apiProvider: "openrouter",
+  },
   "qwen/qwen3-coder:free": {
     name: "qwen/qwen3-coder:free",
     slug: "qwen/qwen3-coder-480b-a35b-07-25",
@@ -264,13 +271,6 @@ export const MODELS: Record<string, ModelConfig> = {
     pricing: { input: 0.0, output: 0.0, throughput: 120 },
     apiProvider: "openrouter",
   },
-  "openrouter/horizon-alpha": {
-    name: "openrouter/horizon-alpha",
-    slug: "openrouter/horizon-alpha",
-    category: "junior",
-    pricing: { input: 0.0, output: 0.0, throughput: 120 },
-    apiProvider: "openrouter",
-  },
   "z-ai/glm-4.5-air:free": {
     name: "z-ai/glm-4.5-air:free",
     slug: "z-ai/glm-4.5-air",
@@ -279,12 +279,12 @@ export const MODELS: Record<string, ModelConfig> = {
     apiProvider: "openrouter",
     parseToolCalls: true,
   },
-  "qwen3-coder-30b-a3b-instruct": {
-    name: "qwen3-coder-30b-a3b-instruct",
+  "qwen3-coder-30b-a3b-instruct@q4_k_m": {
+    name: "qwen3-coder-30b-a3b-instruct@q4_k_m",
     category: "junior",
     pricing: { input: 0.0, output: 0.0, throughput: 30 },
     apiProvider: "lmstudio-ryzenrig",
-    parseToolCalls: true,
+    // parseToolCalls: true,
   },
   "qwen3-30b-a3b-128k@q2_k_l": {
     name: "qwen3-30b-a3b-128k@q2_k_l",

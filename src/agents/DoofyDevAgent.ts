@@ -17,7 +17,7 @@ const bt = "`";
 const tbt = "```";
 
 export class DoofyDevAgent extends Agent {
-  static defaultModel = "qwen3-coder-30b-a3b-instruct";
+  static defaultModel = "z-ai/glm-4.5-air:free";
   public readonly systemPrompt = `You are Doofy, a TypeScript programming assistant. Today is ${new Date().toLocaleDateString()}.
 
   ## Personality
@@ -112,7 +112,7 @@ export class DoofyDevAgent extends Agent {
   `;
 
   // Lower default temperature for more deterministic edits
-  public temperature = 0.3;
+  public temperature = 0.7;
   public tools = [
     findSymbol(),
     listFiles(),
@@ -127,48 +127,14 @@ export class DoofyDevAgent extends Agent {
     // codeIndex(),
     // fixTypeErrors(),
   ];
-  private _indexCache?: any;
 
-  protected override async processReply(message: Message, streaming: boolean) {
-    // Invalidate index cache on any mutating tool call
-    const mutatingTools = new Set([
-      "WriteFile",
-      "EditFile",
-      "MultiEdit",
-      "FindAndReplace",
-      "RenameFile",
-      "DeleteFile",
-    ]);
-
-    if (message.toolCalls?.some((toolCall) => mutatingTools.has(toolCall.name))) {
-      this.invalidateCache();
-    }
-    return super.processReply(message, streaming);
-  }
-
-  protected override async processMessage(
-    message: Message,
-    context: Message[],
-  ): Promise<Message[]> {
-    // Use cached index if not invalidated
-    this._indexCache = this._indexCache ?? (await codeIndex().call({}));
-
-    context.unshift(
+  protected override async getHistoricalContext(): Promise<Message[]> {
+    return [
+      new Message("system", this.systemPrompt),
       new Message(
-        "system",
-        `This is the index for the current working directory:
-${this._indexCache}
-`,
-      ),
-    );
-
-    return super.processMessage(message, context);
-  }
-
-  /**
-   * Invalidate the index cache
-   */
-  public invalidateCache(): void {
-    this._indexCache = null;
+      "system",
+      `This is the index for the current working directory:
+${await codeIndex().call({})}
+`), ...this.history];
   }
 }
