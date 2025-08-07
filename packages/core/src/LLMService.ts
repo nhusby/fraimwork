@@ -148,7 +148,7 @@ export abstract class LLMService {
 {"tool": "ToolName", "parameters": {"param1": "value1", "param2": "value2"}}
 </ToolCall>
 
-CRITICAL: Always use valid JSON format for tool calls. Make sure to match brackets! each "{" must have a matching "}"
+CRITICAL: Always use valid JSON in the <ToolCall> tag. Make sure to match brackets! each "{" must have a matching "}"
 `;
 
     return new Message("system", message);
@@ -206,7 +206,7 @@ CRITICAL: Always use valid JSON format for tool calls. Make sure to match bracke
         const params: { [key: string]: any } = {};
 
         const paramMatches = paramsString.matchAll(
-          /<(?:parameter name="|.*key>)(.+)(?:<\/.*key>\s*<.*value>|">)(.+)<\/(?:parameter|.*value)>/gis,
+          /<(?:parameter name="|\w*?key>)(.+?)(?:<\/\w*?key>\s*<\w*?value>|">)(.+?)<\/(?:parameter|\w*?value)>/gis,
         );
         for (const paramMatch of paramMatches) {
           params[paramMatch[1]!] = paramMatch[2]!;
