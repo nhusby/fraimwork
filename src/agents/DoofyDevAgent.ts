@@ -1,5 +1,5 @@
 import { Agent, Message } from "@fraimwork/core";
-import { codeIndexLite as codeIndex, findSymbol } from "@fraimwork/codetools";
+import {codeIndexLite as codeIndex, findSymbol, typeCheck} from "@fraimwork/codetools";
 import {
   deleteFile,
   editFile,
@@ -124,6 +124,7 @@ export class DoofyDevAgent extends Agent {
     multiEdit(),
     renameFile(),
     deleteFile(),
+    typeCheck(),
     // codeIndex(),
     // fixTypeErrors(),
   ];
