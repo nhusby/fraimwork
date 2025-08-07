@@ -158,7 +158,7 @@ CRITICAL: Always use valid JSON format for tool calls. Make sure to match bracke
     if (parseToolCalls) {
       message.toolCalls = this.parseToolCallsFromText(message.content);
       message.content = message.content.replace(
-        /<Tool_?Call>\s*\{.*?}\s*<\/Tool_?Call>/gis,
+        /<Tool_?Call>.*<\/Tool_?Call>/gis,
         "",
       );
     }
@@ -171,14 +171,12 @@ CRITICAL: Always use valid JSON format for tool calls. Make sure to match bracke
    */
   protected parseToolCallsFromText(text: string): ToolCall[] {
     const toolCalls: ToolCall[] = [];
-    const matches = text.matchAll(
+    const jsonMatches = text.matchAll(
       /<Tool_?Call>\s*(\{.*?})\s*<\/Tool_?Call>/gis,
     );
-
-    for (const match of matches) {
+    for (const match of jsonMatches) {
       try {
         const json = JSON.parse(match[1]!); // Use capture group for just the JSON content
-
         const toolCallsArray = Array.isArray(json) ? json : [json];
         for (const [i, tc] of toolCallsArray.entries()) {
           const name = tc.name ?? tc.tool;
@@ -191,8 +189,34 @@ CRITICAL: Always use valid JSON format for tool calls. Make sure to match bracke
           toolCalls.push(toolCall);
         }
       } catch (e: any) {
-        console.error("Failed to parse tool call:", e.message);
+        console.error("Failed to parse tool call (JSON):", e.message);
         console.log("JSON content:", match[1]);
+      }
+    }
+
+    // Regex for all <tool_call> variants
+    const xmlMatches = text.matchAll(
+      /<Tool_?Call>\s*(?:<Tool_?Name>)?(.+?)(?:<\/Tool_?Name>)?\s*(<.+>.+<\/.*>)\s*<\/Tool_?Call>/gis,
+    );
+
+    for (const match of xmlMatches) {
+      try {
+        const name = match[1]!;
+        const paramsString = match[2]!;
+        const params: { [key: string]: any } = {};
+
+        const paramMatches = paramsString.matchAll(
+          /<(?:parameter name="|.*key>)(.+)(?:<\/.*key>\s*<.*value>|">)(.+)<\/(?:parameter|.*value)>/gis,
+        );
+        for (const paramMatch of paramMatches) {
+          params[paramMatch[1]!] = paramMatch[2]!;
+        }
+
+        const toolCall = new ToolCall(`${name}-${Date.now()}`, name, params);
+        toolCalls.push(toolCall);
+      } catch (e: any) {
+        console.error("Failed to parse tool call:", e.message);
+        console.log("XML content:", match[0]);
         // Continue processing other matches
       }
     }
