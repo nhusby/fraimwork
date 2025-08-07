@@ -31,7 +31,7 @@ export function renameFile(): Tool {
         // Validate that both paths are within the working directory
         const validatedOldPath = await validatePath(oldPath);
         const validatedNewPath = await validatePath(newPath);
-        
+
         // Ensure the target directory exists
         const targetDir = path.dirname(validatedNewPath);
         await fs.mkdir(targetDir, { recursive: true });

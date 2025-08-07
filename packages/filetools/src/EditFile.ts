@@ -43,7 +43,7 @@ export function editFile(): Tool {
       try {
         // Validate that the file path is within the working directory
         const validatedPath = await validatePath(filePath);
-        
+
         let currentContent: string;
         let isNewFile = false;
 

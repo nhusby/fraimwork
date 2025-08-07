@@ -9,19 +9,19 @@ import * as fs from "fs/promises";
  */
 export async function validatePath(
   filePath: string,
-  workingDir: string = process.cwd()
+  workingDir: string = process.cwd(),
 ): Promise<string> {
   // Resolve the file path to an absolute path
   const absolutePath = path.resolve(filePath);
-  
+
   // Resolve the working directory to an absolute path
   const absoluteWorkingDir = path.resolve(workingDir);
-  
+
   // Check if the file path is within the working directory
   if (!absolutePath.startsWith(absoluteWorkingDir)) {
     throw new Error(`Path "${filePath}" is outside the working directory`);
   }
-  
+
   return absolutePath;
 }
 
@@ -33,7 +33,9 @@ export async function validatePath(
  */
 export async function validatePaths(
   filePaths: string[],
-  workingDir: string = process.cwd()
+  workingDir: string = process.cwd(),
 ): Promise<string[]> {
-  return Promise.all(filePaths.map(filePath => validatePath(filePath, workingDir)));
+  return Promise.all(
+    filePaths.map((filePath) => validatePath(filePath, workingDir)),
+  );
 }

@@ -220,7 +220,7 @@ export const MODELS: Record<string, ModelConfig> = {
     // successfully added todos with EditFile
     name: "qwen/qwen3-30b-a3b",
     slug: "qwen/qwen3-30b-a3b-04-28",
-    providers: ["parasail/fp8","deepinfra/fp8"],
+    providers: ["parasail/fp8", "deepinfra/fp8"],
     category: "junior",
     pricing: { input: 0.08, output: 0.29, throughput: 100 },
     apiProvider: "openrouter",
@@ -349,7 +349,7 @@ export function createModelConfig(modelKey: string): FrameworkModelConfig {
     parseToolCalls: model.parseToolCalls,
     noStreaming: model.noStreaming,
     // @ts-ignore
-    slug: model.slug
+    slug: model.slug,
   };
 }
 

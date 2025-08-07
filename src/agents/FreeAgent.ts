@@ -178,7 +178,9 @@ ${this._indexCache}
     ]);
 
     if (
-      message.toolCalls?.some((toolCall: any) => mutatingTools.has(toolCall.name))
+      message.toolCalls?.some((toolCall: any) =>
+        mutatingTools.has(toolCall.name),
+      )
     ) {
       this.invalidateCache();
     }

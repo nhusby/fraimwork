@@ -2,9 +2,9 @@ import { Message, Tool, estimateTokens } from "@fraimwork/core";
 import * as readline from "readline";
 import { AgentFactory } from "./lib/AgentFactory.ts";
 import { DoofyDevAgent } from "./agents/DoofyDevAgent.ts";
-import {FastAgent} from "./agents/FastAgent.js";
+import { FastAgent } from "./agents/FastAgent.js";
 
-let agent = AgentFactory.getAgent(FastAgent);
+let agent = AgentFactory.getAgent(DoofyDevAgent);
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -27,7 +27,7 @@ He's here to help! (But maybe he shouldn't...)
 
 How can Doofy "help" you today?
 `;
-  console.log( splashScreen );
+  console.log(splashScreen);
 
   while (true) {
     try {

@@ -4,7 +4,7 @@ import { AgentFactory } from "../lib/AgentFactory.ts";
 export function askAgent(
   agentClass: typeof Agent,
   name: string,
-  description?: string
+  description?: string,
 ): Tool {
   const toolDescription = description || `Ask ${name} a question`;
 

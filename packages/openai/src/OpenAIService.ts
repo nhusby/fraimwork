@@ -1,6 +1,9 @@
 import { EventEmitter } from "node:events";
 import OpenAI, { ClientOptions } from "openai";
-import type { ChatCompletionCreateParamsStreaming, ChatCompletionCreateParamsNonStreaming } from "openai/resources";
+import type {
+  ChatCompletionCreateParamsStreaming,
+  ChatCompletionCreateParamsNonStreaming,
+} from "openai/resources";
 import {
   d,
   estimateTokens,
@@ -95,9 +98,11 @@ export class OpenAIService extends LLMService {
     reject: (reason?: any) => void,
   ) {
     try {
-      const response = await this.client.chat.completions.create(params as any as ChatCompletionCreateParamsNonStreaming,);
+      const response = await this.client.chat.completions.create(
+        params as any as ChatCompletionCreateParamsNonStreaming,
+      );
 
-      if("error" in response){
+      if ("error" in response) {
         // @ts-ignore
         throw new Error(`Upstream error: ${response.error.message}`);
       }
@@ -225,7 +230,7 @@ export class OpenAIService extends LLMService {
                 emitter.emit("toolCall", toolCall);
               } catch (e) {
                 emitter.emit("error", e);
-                console.log(toolCall)
+                console.log(toolCall);
               }
             }
           }
@@ -280,22 +285,22 @@ function parseToolCallArgs(args: string): any {
   } catch (e) {
     // If JSON parsing fails, try XML format
     const result: Record<string, string> = {};
-    
+
     // Match XML pattern: <parameter=name>value</parameter>
     const regex = /<parameter=([^>]+)>(.*?)<\/parameter>/g;
     let match;
-    
+
     while ((match = regex.exec(args)) !== null) {
       const paramName = match[1]!;
       const paramValue = match[2]!;
       result[paramName] = paramValue;
     }
-    
+
     // If we found any parameters, return the result object
     if (Object.keys(result).length > 0) {
       return result;
     }
-    
+
     // If no XML parameters were found, rethrow the original JSON parse error
     throw e;
   }

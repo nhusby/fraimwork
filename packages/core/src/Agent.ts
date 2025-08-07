@@ -103,7 +103,9 @@ export abstract class Agent extends EventEmitter {
       for (const toolCall of reply.toolCalls) {
         try {
           const tool = this.tools.find((t) => t.name === toolCall.name);
-          console.log(`[ ToolCall: ${ toolCall.name } ${ JSON.stringify(toolCall.args).replace(/\s+/g, " ").substring(0, 60) } ]`)
+          console.log(
+            `[ ToolCall: ${toolCall.name} ${JSON.stringify(toolCall.args).replace(/\s+/g, " ").substring(0, 60)} ]`,
+          );
           if (tool) {
             toolCall.result = await tool.call(toolCall.args);
           } else {

@@ -31,7 +31,7 @@ export function writeFile(): Tool {
       try {
         // Validate that the file path is within the working directory
         const validatedPath = await validatePath(filePath);
-        
+
         // Ensure the directory exists
         const dir = path.dirname(validatedPath);
         await fs.mkdir(dir, { recursive: true });

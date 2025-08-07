@@ -1,4 +1,4 @@
-import {findSymbol, typeCheck} from "@fraimwork/codetools";
+import { findSymbol, typeCheck } from "@fraimwork/codetools";
 import { Agent } from "@fraimwork/core";
 import {
   deleteFile,

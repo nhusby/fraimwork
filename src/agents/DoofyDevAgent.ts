@@ -132,9 +132,12 @@ export class DoofyDevAgent extends Agent {
     return [
       new Message("system", this.systemPrompt),
       new Message(
-      "system",
-      `This is the index for the current working directory:
+        "system",
+        `This is the index for the current working directory:
 ${await codeIndex().call({})}
-`), ...this.history];
+`,
+      ),
+      ...this.history,
+    ];
   }
 }

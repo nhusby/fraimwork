@@ -145,7 +145,9 @@ export class FastAgent extends FailoverAgent {
     const sortedModels = this.sortModels(modelStats);
     FastAgent.modelNames = sortedModels.map((m) => m.name);
 
-    super.initializeModels(FastAgent.modelNames.map((modelName) => createModelConfig(modelName)));
+    super.initializeModels(
+      FastAgent.modelNames.map((modelName) => createModelConfig(modelName)),
+    );
   }
 
   private async fetchModelStats(modelConfigs: any): Promise<any[]> {
@@ -170,8 +172,13 @@ export class FastAgent extends FailoverAgent {
   }
 
   private sortModels(modelStats: any[]): any[] {
-    return modelStats
-      .sort((a, b) => (a.p50_latency + a.p50_throughput * tokenWeight) - b.p50_latency + b.p50_throughput * tokenWeight);
+    return modelStats.sort(
+      (a, b) =>
+        a.p50_latency +
+        a.p50_throughput * tokenWeight -
+        b.p50_latency +
+        b.p50_throughput * tokenWeight,
+    );
   }
 
   protected override async getHistoricalContext(): Promise<Message[]> {
@@ -181,6 +188,9 @@ export class FastAgent extends FailoverAgent {
         "system",
         `This is the index for the current working directory:
 ${await codeIndex().call({})}
-`), ...this.history];
+`,
+      ),
+      ...this.history,
+    ];
   }
 }

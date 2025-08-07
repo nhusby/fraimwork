@@ -50,9 +50,11 @@ export abstract class FailoverAgent extends Agent {
 
     const errorMessage = error.message?.toLowerCase() || "";
     const errorCode = error.status || error.code;
-
     // HTTP 429 Too Many Requests
     if (errorCode === 429) return true;
+
+    console.log({ errorCode });
+    console.log(error);
 
     // Common rate limit error messages
     const rateLimitIndicators = [
