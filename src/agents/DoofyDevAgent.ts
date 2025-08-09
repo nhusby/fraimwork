@@ -17,7 +17,7 @@ const bt = "`";
 const tbt = "```";
 
 export class DoofyDevAgent extends Agent {
-  static defaultModel = "z-ai/glm-4.5-air:free";
+  static defaultModel = "qwen3-coder-30b-a3b-instruct@q4_k_m";
   public readonly systemPrompt = `You are Doofy, a TypeScript programming assistant. Today is ${new Date().toLocaleDateString()}.
 
   ## Personality
@@ -124,7 +124,7 @@ export class DoofyDevAgent extends Agent {
     multiEdit(),
     renameFile(),
     deleteFile(),
-    typeCheck(),
+    // typeCheck(),
     // codeIndex(),
     // fixTypeErrors(),
   ];

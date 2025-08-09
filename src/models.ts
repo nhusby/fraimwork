@@ -60,8 +60,8 @@ export const MODELS: Record<string, ModelConfig> = {
     pricing: { input: 1.5, output: 4.0, throughput: 40 },
     apiProvider: "openrouter",
   },
-  "moonshotai/kimi-k2:moonshot": {
-    name: "moonshotai/kimi-k2",
+  "kimi-k2-turbo-preview": {
+    name: "kimi-k2-turbo-preview",
     // providers: [""],
     category: "senior",
     pricing: { input: 0, output: 0, throughput: 40 },
@@ -74,13 +74,37 @@ export const MODELS: Record<string, ModelConfig> = {
     pricing: { input: 0, output: 0, throughput: 35 },
     apiProvider: "openrouter",
   },
-  "qwen/qwen3-coder:free": {
-    name: "qwen/qwen3-coder:free",
-    slug: "qwen/qwen3-coder-480b-a35b-07-25",
-    // providers: ["chutes/fp8"],
+
+  // cerebras
+  "qwen-3-coder-480b": {
+    name: "qwen-3-coder-480b",
     category: "senior",
-    pricing: { input: 0, output: 0, throughput: 35 },
-    apiProvider: "openrouter",
+    pricing: { input: 0, output: 0, throughput: 1500 },
+    apiProvider: "cerebras"
+  },
+  "gpt-oss-120b": {
+    name: "gpt-oss-120b",
+    category: "senior",
+    pricing: { input: 0, output: 0, throughput: 1500 },
+    apiProvider: "cerebras"
+  },
+  "qwen-3-235b-a22b-instruct-2507": {
+    name: "qwen-3-235b-a22b-instruct-2507",
+    category: "senior",
+    pricing: { input: 0, output: 0, throughput: 1500 },
+    apiProvider: "cerebras"
+  },
+  "qwen-3-235b-a22b-thinking-2507": {
+    name: "qwen-3-235b-a22b-thinking-2507",
+    category: "senior",
+    pricing: { input: 0, output: 0, throughput: 1500 },
+    apiProvider: "cerebras"
+  },
+  "qwen-3-32b": {
+    name: "qwen-3-235b-a22b-thinking-2507",
+    category: "senior",
+    pricing: { input: 0, output: 0, throughput: 1500 },
+    apiProvider: "cerebras"
   },
 
   // Mid-level Engineer
@@ -264,13 +288,6 @@ export const MODELS: Record<string, ModelConfig> = {
     apiProvider: "lmstudio",
   },
   // "mistralai/devstral-small-2505:free" - broken
-  "openrouter/horizon-beta": {
-    name: "openrouter/horizon-beta",
-    slug: "openrouter/horizon-beta",
-    category: "junior",
-    pricing: { input: 0.0, output: 0.0, throughput: 120 },
-    apiProvider: "openrouter",
-  },
   "z-ai/glm-4.5-air:free": {
     name: "z-ai/glm-4.5-air:free",
     slug: "z-ai/glm-4.5-air",
@@ -291,6 +308,16 @@ export const MODELS: Record<string, ModelConfig> = {
     category: "junior",
     pricing: { input: 0.0, output: 0.0, throughput: 30 },
     apiProvider: "lmstudio-ryzenrig",
+    parseToolCalls: true,
+  },
+
+
+//   presets
+  "@preset/free-agent": {
+    name: "@preset/free-agent",
+    category: "senior",
+    pricing: { input: 0.0, output: 0.0, throughput: 50 },
+    apiProvider: "openrouter",
     parseToolCalls: true,
   },
 };
@@ -316,6 +343,11 @@ export const ApiProviders: Record<string, ProviderConfig> = {
     baseURL: "http://ryzenrig:1234/v1",
     apiKey: "lm-studio",
   },
+  cerebras: {
+    name: "Cerebras",
+    apiKey: process.env.CEREBRAS_API_KEY,
+    baseURL: "https://api.cerebras.ai/v1/",
+  }
   // Add more providers as needed
 };
 
