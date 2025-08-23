@@ -5,43 +5,25 @@ import { Message } from "./Message.ts";
 import { ToolCall } from "./ToolCall.ts";
 import { d } from "./utils.ts";
 
-export interface ModelConfig {
-  name: string;
-  service: LLMService;
-  parseToolCalls?: boolean;
-  noStreaming?: boolean;
+export interface AgentConfig {
+  llm: LLMService;
+  tools?: Tool[];
+  systemPrompt?: string;
+  history?: Message[];
+  temperature?: number;
+  maxTokens?: number;
 }
 
 export abstract class Agent extends EventEmitter {
   public abstract readonly systemPrompt: string;
   public abstract tools: Tool[];
-  public temperature: number = 0.2;
+  public temperature: number = 0.7;
   public maxTokens?: number;
-
-  protected model: ModelConfig;
-
-  constructor(modelConfig: ModelConfig) {
-    super();
-    this.model = modelConfig;
-  }
-
-  protected get llmService(): LLMService {
-    return this.model.service;
-  }
-
-  public get modelName(): string {
-    return this.model.name;
-  }
-
-  protected get parseToolCalls(): boolean {
-    return this.model.parseToolCalls ?? false;
-  }
-
-  protected get noStreaming(): boolean {
-    return this.model.noStreaming ?? false;
-  }
-
   public history: Message[] = [];
+
+  constructor(public llmService: LLMService) {
+    super();
+  }
 
   /**
    * Unified send method with event-driven streaming
@@ -55,13 +37,11 @@ export abstract class Agent extends EventEmitter {
       : await this.getHistoricalContext();
 
     const streamablePromise = this.llmService.send({
-      model: this.modelName,
       messages: this.processMessages(messages),
       tools: this.tools,
       temperature: this.temperature,
       maxTokens: this.maxTokens,
-      parseToolCalls: this.parseToolCalls,
-      streaming: streaming && !this.noStreaming,
+      streaming: streaming,
     } as any);
 
     // Set up event listeners for streaming
@@ -82,7 +62,7 @@ export abstract class Agent extends EventEmitter {
     try {
       const newReply = (await this.processReply(
         reply,
-        streaming && !this.noStreaming,
+        streaming,
       )) as Message;
 
       this.emit("complete", newReply);

@@ -4,26 +4,24 @@ import { ToolCall } from "./ToolCall.ts";
 import { StreamablePromise } from "./StreamablePromise.ts";
 import { EventEmitter } from "node:events";
 
-/**
- * Interface for LLM service providers (OpenAI, Anthropic, ollama, etc.)
- */
 export abstract class LLMService {
-  /**
-   * Send a message to the LLM and get a streamable promise
-   * Can be awaited for final result or listened to for streaming events
-   */
+  public readonly model: string;
+  public readonly parseToolCalls: boolean;
+
+  constructor(model: string, parseToolCalls: boolean = false) {
+    this.model = model;
+    this.parseToolCalls = parseToolCalls;
+  }
+
   public send(params: {
-    model: string;
     messages: Message[];
     tools?: Tool[];
     temperature?: number;
     maxTokens?: number;
-    parseToolCalls?: boolean;
     streaming?: boolean;
   }): StreamablePromise<Message> {
-    // insert tool instructions and translate historical tool calls
     const processedParams = { ...params };
-    if (params.parseToolCalls && params.tools) {
+    if (this.parseToolCalls && params.tools) {
       processedParams.messages = [
         this.generateToolsSystemMessage(params.tools),
         ...params.messages,
@@ -31,28 +29,21 @@ export abstract class LLMService {
       delete processedParams.tools;
     }
 
-    // Delegate to the concrete implementation
     return this._send(processedParams);
   }
 
   protected abstract _send(params: {
-    model: string;
     messages: Message[];
     tools?: Tool[];
     temperature?: number;
     maxTokens?: number;
-    parseToolCalls?: boolean;
     streaming?: boolean;
   }): StreamablePromise<Message>;
 
-  /**
-   * Process streaming response with tool parsing when parseToolCalls is enabled
-   */
   protected handleStreamingWithToolParsing(
     sourceEmitter: EventEmitter,
-    parseToolCalls: boolean,
   ): EventEmitter {
-    if (!parseToolCalls) {
+    if (!this.parseToolCalls) {
       return sourceEmitter;
     }
 
@@ -70,19 +61,14 @@ export abstract class LLMService {
             /^\s*(<T?o?o?$|<Tool_?$|<Tool_?Ca?l?l?$|<Tool_?Call>)/i,
           )
         ) {
-          // Not a tool call, emit as regular content
           resultEmitter.emit("chunk", toolBuffer);
           toolBuffer = "";
         } else {
-          // Check if we have a complete tool call to skip
           if (toolBuffer.match(/<Tool_?Call>.*?<\/Tool_?Call>/is)) {
-            // Complete tool call found, skip it (don't emit)
             toolBuffer = "";
           }
-          // Otherwise keep buffering until we know what it is
         }
       } else {
-        // Regular content, emit immediately
         resultEmitter.emit("chunk", chunk);
       }
     });
@@ -92,14 +78,12 @@ export abstract class LLMService {
     });
 
     sourceEmitter.on("complete", (message: Message) => {
-      // Process any remaining tool buffer as regular content if it's not a tool call
       if (toolBuffer && !toolBuffer.match(/<Tool_?Call>/i)) {
         resultEmitter.emit("chunk", toolBuffer);
       }
 
-      this.processMessageToolCalls(message, parseToolCalls);
+      this.processMessageToolCalls(message, this.parseToolCalls);
 
-      // Emit any found tool calls
       if (message.toolCalls?.length) {
         for (const toolCall of message.toolCalls) {
           resultEmitter.emit("toolCall", toolCall);
@@ -112,9 +96,6 @@ export abstract class LLMService {
     return resultEmitter;
   }
 
-  /**
-   * Generates a system message explaining the available tools and how to invoke them
-   */
   protected generateToolsSystemMessage(tools: Tool[]) {
     let message = "You have access to the following tools:\n\n";
 
@@ -145,11 +126,10 @@ export abstract class LLMService {
     message += `To use a tool, respond with the following format:
 
 <ToolCall>
-{"tool": "ToolName", "parameters": {"param1": "value1", "param2": "value2"}}
+{\"tool\": \"ToolName\", \"parameters\": {\"param1\": \"value1\", \"param2\": \"value2\"}}
 </ToolCall>
 
-CRITICAL: Always use valid JSON in the <ToolCall> tag. Make sure to match brackets! each "{" must have a matching "}"
-`;
+CRITICAL: Always use valid JSON in the <ToolCall> tag. Make sure to match brackets! each "{" must have a matching "}"\n`;
 
     return new Message("system", message);
   }
@@ -166,17 +146,14 @@ CRITICAL: Always use valid JSON in the <ToolCall> tag. Make sure to match bracke
     return message;
   }
 
-  /**
-   * Parse tool calls from text content using <ToolCall> tags
-   */
   protected parseToolCallsFromText(text: string): ToolCall[] {
     const toolCalls: ToolCall[] = [];
     const jsonMatches = text.matchAll(
-      /<Tool_?Call>\s*(\{.*?})\s*<\/Tool_?Call>/gis,
+      /<Tool_?Call>\s*(\{.*?\})\s*<\/Tool_?Call>/gis,
     );
     for (const match of jsonMatches) {
       try {
-        const json = JSON.parse(match[1]!); // Use capture group for just the JSON content
+        const json = JSON.parse(match[1]!); 
         const toolCallsArray = Array.isArray(json) ? json : [json];
         for (const [i, tc] of toolCallsArray.entries()) {
           const name = tc.name ?? tc.tool;
@@ -194,7 +171,6 @@ CRITICAL: Always use valid JSON in the <ToolCall> tag. Make sure to match bracke
       }
     }
 
-    // Regex for all <tool_call> variants
     const xmlMatches = text.matchAll(
       /<Tool_?Call>\s*(?:<Tool_?Name>)?(.+?)(?:<\/Tool_?Name>)?\s*(<.+>.+<\/.*>)\s*<\/Tool_?Call>/gis,
     );
@@ -217,7 +193,6 @@ CRITICAL: Always use valid JSON in the <ToolCall> tag. Make sure to match bracke
       } catch (e: any) {
         console.error("Failed to parse tool call:", e.message);
         console.log("XML content:", match[0]);
-        // Continue processing other matches
       }
     }
 

@@ -1,60 +1,60 @@
-import { Agent } from "./Agent.ts";
+import { Agent, AgentConfig } from "./Agent.ts";
 import { Message } from "./Message.ts";
-import type { ModelConfig } from "./Agent.ts";
+import { LLMService } from "./LLMService.ts";
 
-interface ExtendedModelConfig extends ModelConfig {
+interface ServiceStatus {
+  service: LLMService;
   failureCount: number;
   lastFailure?: Date;
 }
 
 /**
- * Abstract base class for agents that failover when rate limits or other problems occur
+ * Agent that fails over when rate limits or other problems occur
  */
-export abstract class FailoverAgent extends Agent {
-  protected models: ExtendedModelConfig[] = [];
-  declare protected model: ExtendedModelConfig;
+export class FailoverAgent extends Agent {
+  private services: ServiceStatus[] = [];
+  private currentService: ServiceStatus;
 
-  constructor(modelConfigs: ModelConfig[]) {
-    if (!modelConfigs.length) {
-      throw new Error("At least one model config must be provided");
+  constructor(services: LLMService[], baseConfig: Omit<AgentConfig, "llm">) {
+    if (!services.length) {
+      throw new Error("At least one LLM Service must be provided");
     }
 
-    super(modelConfigs[0]!);
+    super({ ...baseConfig, llm: services[0]! });
 
-    this.initializeModels(modelConfigs);
+    this.initializeServices(services);
+    this.currentService = this.services[0]!;
   }
 
-  protected initializeModels(modelConfigs: ModelConfig[]): void {
-    this.models = modelConfigs.map((config) => ({
-      ...config,
+  private initializeServices(services: LLMService[]): void {
+    this.services = services.map((service) => ({
+      service,
       failureCount: 0,
     }));
-    this.model = this.models[0]!;
   }
 
   /**
    * Rotate to the next model in the list
    */
-  protected rotateToNextModel() {
-    const index = (this.models.indexOf(this.model) + 1) % this.models.length;
-    this.model = this.models[index]!;
+  private rotateToNextService() {
+    const currentIndex = this.services.indexOf(this.currentService);
+    const nextIndex = (currentIndex + 1) % this.services.length;
+    this.currentService = this.services[nextIndex]!;
+    this.llmService = this.currentService.service; // Update the underlying llm service in the agent
 
-    console.log(`🔄 Rotated to model: ${this.model.name}`);
+    console.log(`🔄 Rotated to service: ${this.llmService.constructor.name}`);
   }
 
   /**
    * Check if an error indicates a rate limit or quota issue
    */
-  protected isRateLimitError(error: any): boolean {
+  private isRateLimitError(error: any): boolean {
     if (!error) return false;
 
     const errorMessage = error.message?.toLowerCase() || "";
     const errorCode = error.status || error.code;
     // HTTP 429 Too Many Requests
     if (errorCode === 429) return true;
-
-    console.log({ errorCode });
-    console.log(error);
 
     // Common rate limit error messages
     const rateLimitIndicators = [
@@ -75,10 +75,12 @@ export abstract class FailoverAgent extends Agent {
   /**
    * Record a failure for the current model
    */
-  protected recordModelFailure(error: any): void {
-    this.model.failureCount++;
-    this.model.lastFailure = new Date();
-    console.log(`❌ Model ${this.model.name} failed: ${error.message}`);
+  private recordServiceFailure(error: any): void {
+    this.currentService.failureCount++;
+    this.currentService.lastFailure = new Date();
+    console.log(
+      `❌ Service ${this.llmService.constructor.name} failed: ${error.message}`,
+    );
   }
 
   /**
@@ -91,21 +93,21 @@ export abstract class FailoverAgent extends Agent {
     let lastError: any;
     let attempts = 0;
 
-    while (attempts < 3 * this.models.length) {
+    while (attempts < 3 * this.services.length) {
       try {
         // Call the parent send method with the same interface
         const result = await super.send(message, streaming);
 
         // Success! Reset failure count for this model
-        this.model.failureCount = 0;
+        this.currentService.failureCount = 0;
         return result;
       } catch (error) {
         lastError = error;
-        this.recordModelFailure(error);
+        this.recordServiceFailure(error);
 
         // Only rotate on rate limit errors, not all errors
         if (this.isRateLimitError(error)) {
-          this.rotateToNextModel();
+          this.rotateToNextService();
         } else {
           // For non-rate-limit errors, don't rotate, just throw
           throw error;
@@ -117,7 +119,9 @@ export abstract class FailoverAgent extends Agent {
 
     // If we get here, all models failed with rate limits
     throw new Error(
-      `All models exhausted. Last error: ${lastError?.message || "Unknown error"}`,
+      `All services exhausted. Last error: ${
+        lastError?.message || "Unknown error"
+      }`,
     );
   }
 }

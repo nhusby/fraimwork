@@ -1,10 +1,15 @@
-import { Message, Tool, estimateTokens } from "@fraimwork/core";
+import { Message, Tool, estimateTokens, FailoverAgent } from "@fraimwork/core";
+import { OpenAIService } from "@fraimwork/openai";
 import * as readline from "readline";
-import { AgentFactory } from "./lib/AgentFactory.ts";
-import { DoofyDevAgent } from "./agents/DoofyDevAgent.ts";
-import { FastAgent } from "./agents/FastAgent.js";
+import {DoofyDevAgent} from "./agents/DoofyDevAgent.ts";
 
-let agent = AgentFactory.getAgent(DoofyDevAgent);
+const llm = new OpenAIService({
+  model: "qwen3-coder-30b-a3b-instruct@q5_k_xl",
+  baseURL: "http://ryzenrig:1234/v1",
+  apiKey: process.env.OPENAI_API_KEY,
+  parseToolCalls: true,
+});
+const agent = new DoofyDevAgent(llm);
 
 const rl = readline.createInterface({
   input: process.stdin,

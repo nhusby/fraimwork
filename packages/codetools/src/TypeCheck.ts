@@ -35,8 +35,7 @@ export function typeCheck(): Tool {
           // Filter out non-error messages
           const errorLines = stderr
             .split("\n")
-            .filter(
-              (line) =>
+            .filter((line: string) =>
                 line.includes("error TS") ||
                 (line.includes(":") && line.includes("error")),
             );
@@ -50,8 +49,7 @@ export function typeCheck(): Tool {
         if (stdout) {
           const errorLines = stdout
             .split("\n")
-            .filter(
-              (line) =>
+            .filter((line: string) =>
                 line.includes("error TS") ||
                 (line.includes(":") && line.includes("error")),
             );
@@ -68,8 +66,7 @@ export function typeCheck(): Tool {
           const output = execError.stderr || execError.stdout;
           const errorLines = output
             .split("\n")
-            .filter(
-              (line) =>
+            .filter((line: string) =>
                 line.includes("error TS") ||
                 (line.includes(":") && line.includes("error")),
             );

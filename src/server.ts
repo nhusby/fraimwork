@@ -2,10 +2,9 @@ import express from "express";
 import type { NextFunction, Request, Response } from "express";
 import cors from "cors";
 import * as fs from "fs";
-import { DoofyDevAgent } from "./agents/DoofyDevAgent";
-import { FreeAgent } from "./agents/FreeAgent";
+import { createDoofyDevAgent } from "./agents/DoofyDevAgent.js";
 import { Message, Agent } from "@fraimwork/core";
-import { AgentFactory } from "./lib/AgentFactory";
+import { OpenAIService } from "@fraimwork/openai";
 import { createHash } from "crypto";
 
 const conversationHistoryFile = "./conversationHistory.json";
@@ -41,12 +40,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Available agent types
-const agentTypes: Record<string, any> = {
-  doofy: DoofyDevAgent,
-  free: FreeAgent,
-};
-
 // OpenAI-compatible API endpoint for chat completions
 app.post(
   "/v1/chat/completions",
@@ -62,10 +55,10 @@ app.post(
         previous_response_id,
       } = req.body;
 
-      if (!agentTypes[model]) {
+      if (model !== 'doofy') {
         res.status(400).json({
           error: {
-            message: `Model '${model}' not found. Available models: ${Object.keys(agentTypes).join(", ")}`,
+            message: `Model '${model}' not found. Available models: doofy`,
             type: "invalid_request_error",
             param: "model",
             code: "model_not_found",
@@ -74,7 +67,18 @@ app.post(
         return next();
       }
 
-      const agent: Agent = AgentFactory.getAgent(agentTypes[model]);
+      const llmConfig = {
+        apiKey: process.env.OPENAI_API_KEY,
+        baseURL: process.env.OPENAI_BASE_URL,
+        model: process.env.MODEL_NAME ?? "qwen3-coder-30b-a3b-instruct@q5_k_xl",
+      };
+      
+      if (!llmConfig.apiKey) {
+        throw new Error("OPENAI_API_KEY environment variable is not set.");
+      }
+
+      const llm = new OpenAIService(llmConfig);
+      const agent = createDoofyDevAgent({ llm });
 
       const userMessages = messages.filter(
         (message: any) => message.role == "user",
@@ -84,7 +88,7 @@ app.post(
         agent.history = conversationById[previous_response_id];
         agent.history.push(userMessages.pop());
       } else if (userMessages.length > 1) {
-        agent.history =
+        agent.history = 
           conversationByHash[
             hash(userMessages[userMessages.length - 2].content)
           ];
@@ -118,7 +122,7 @@ app.post(
             id,
             object: "chat.completion.chunk",
             created: Math.floor(Date.now() / 1000),
-            model: agent.modelName,
+            model: agent.llm.model,
             choices: [
               {
                 index: 0,
@@ -126,7 +130,9 @@ app.post(
                 finish_reason: null,
               },
             ],
-          })}\n\n`,
+          })}
+
+`,
         );
 
         // Event-driven streaming
@@ -137,7 +143,7 @@ app.post(
               id,
               object: "chat.completion.chunk",
               created: Math.floor(Date.now() / 1000),
-              model: agent.modelName,
+              model: agent.llm.model,
               choices: [
                 {
                   index: 0,
@@ -145,7 +151,9 @@ app.post(
                   finish_reason: null,
                 },
               ],
-            })}\n\n`,
+            })}
+
+`,
           );
         });
 
@@ -156,7 +164,7 @@ app.post(
               id,
               object: "chat.completion.chunk",
               created: Math.floor(Date.now() / 1000),
-              model: agent.modelName,
+              model: agent.llm.model,
               choices: [
                 {
                   index: 0,
@@ -164,7 +172,9 @@ app.post(
                   finish_reason: null,
                 },
               ],
-            })}\n\n`,
+            })}
+
+`,
           );
         });
 
@@ -175,7 +185,7 @@ app.post(
               id,
               object: "chat.completion.chunk",
               created: Math.floor(Date.now() / 1000),
-              model: agent.modelName,
+              model: agent.llm.model,
               choices: [
                 {
                   index: 0,
@@ -183,7 +193,9 @@ app.post(
                   finish_reason: "stop",
                 },
               ],
-            })}\n\n`,
+            })}
+
+`,
           );
         } catch (e) {
           console.error("Error:", e);
@@ -192,7 +204,7 @@ app.post(
               id,
               object: "chat.completion.chunk",
               created: Math.floor(Date.now() / 1000),
-              model: agent.modelName,
+              model: agent.llm.model,
               choices: [
                 {
                   index: 0,
@@ -200,7 +212,9 @@ app.post(
                   finish_reason: "error",
                 },
               ],
-            })}\n\n`,
+            })}
+
+`,
           );
         }
         res.write("data: [DONE]\n\n");
@@ -213,7 +227,7 @@ app.post(
           id: `chatcmpl-${Date.now()}`,
           object: "chat.completion",
           created: Math.floor(Date.now() / 1000),
-          model: agent.modelName,
+          model: agent.llm.model,
           choices: [
             {
               index: 0,
@@ -247,7 +261,9 @@ app.post(
                 finish_reason: "error",
               },
             ],
-          })}\n\n`,
+          })}
+
+`,
         );
         saveConversationHistory(conversationById, conversationByHash);
         res.end();
@@ -265,7 +281,7 @@ app.post(
 );
 
 // OpenAI-compatible API endpoint for listing models
-app.get("/v1/models", async (req, res, next) => {
+app.get("/v1/models", async (req: Request, res: Response, next: NextFunction) => {
   console.log("/v1/models");
   res.send({
     object: "list",
@@ -275,12 +291,6 @@ app.get("/v1/models", async (req, res, next) => {
         object: "model",
         created: 1686935002,
         owned_by: "your mom",
-      },
-      {
-        id: "free",
-        object: "model",
-        created: 1686935002,
-        owned_by: "openrouter",
       },
     ],
   });
