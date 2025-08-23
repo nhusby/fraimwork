@@ -17,7 +17,7 @@ const bt = "`";
 const tbt = "```";
 
 export class DoofyDevAgent extends Agent {
-  static defaultModel = "qwen3-coder-30b-a3b-instruct@q4_k_m";
+  static defaultModel = "qwen3-coder-30b-a3b-instruct@q5_k_xl";
   public readonly systemPrompt = `You are Doofy, a TypeScript programming assistant. Today is ${new Date().toLocaleDateString()}.
 
   ## Personality
@@ -124,9 +124,6 @@ export class DoofyDevAgent extends Agent {
     multiEdit(),
     renameFile(),
     deleteFile(),
-    // typeCheck(),
-    // codeIndex(),
-    // fixTypeErrors(),
   ];
 
   protected override async getHistoricalContext(): Promise<Message[]> {

@@ -296,6 +296,13 @@ export const MODELS: Record<string, ModelConfig> = {
     apiProvider: "openrouter",
     parseToolCalls: true,
   },
+  "qwen3-coder-30b-a3b-instruct@q5_k_xl": {
+    name: "qwen3-coder-30b-a3b-instruct@q5_k_xl",
+    category: "junior",
+    pricing: { input: 0.0, output: 0.0, throughput: 120 },
+    apiProvider: "lmstudio-ryzenrig",
+    parseToolCalls: true,
+  },
   "qwen3-coder-30b-a3b-instruct@q4_k_m": {
     name: "qwen3-coder-30b-a3b-instruct@q4_k_m",
     category: "junior",
