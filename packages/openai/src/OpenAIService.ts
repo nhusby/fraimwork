@@ -5,6 +5,7 @@ import type {
   ChatCompletionCreateParamsNonStreaming,
 } from "openai/resources";
 import {
+  d,
   estimateTokens,
   LLMService,
   Message,
@@ -28,10 +29,11 @@ export class OpenAIService extends LLMService {
     maxTokens?: number;
     streaming?: boolean;
   }): StreamablePromise<Message> {
-    const sendParams = {
+    params = {
       ...params,
-      model: this.model,
+      // @ts-ignore
       messages: convertMessagesToOpenApi(params.messages),
+      // @ts-ignore
       tools: params.tools?.map((tool) => ({
         type: "function" as const,
         function: {
@@ -43,17 +45,37 @@ export class OpenAIService extends LLMService {
       stream: params.streaming,
     };
 
-    const context = sendParams.messages
+    const context = params.messages
       .map((message) => message.content)
       .join("\n");
     console.log("context tokens: ", estimateTokens(context));
 
     const streamablePromise = new StreamablePromise<Message>(
       (resolve, reject) => {
-        if (sendParams.streaming) {
-          this.handleStreamingRequest(sendParams, resolve, reject).catch(reject);
+        if (params.streaming) {
+          // Streaming mode - handle async
+          this.handleStreamingRequest(params)
+            .then((emitter) => {
+              // Forward events from the internal emitter to the StreamablePromise
+              emitter.on("chunk", (chunk) =>
+                streamablePromise.emit("chunk", chunk),
+              );
+              emitter.on("toolCall", (toolCall) =>
+                streamablePromise.emit("toolCall", toolCall),
+              );
+              emitter.on("error", (error: any) => {
+                streamablePromise.emit("error", error);
+                reject(error);
+              });
+              emitter.on("complete", (message) => {
+                streamablePromise.emit("complete", message);
+                resolve(message);
+              });
+            })
+            .catch(reject);
         } else {
-          this.handleNonStreamingRequest(sendParams, resolve, reject).catch(reject);
+          // Non-streaming mode
+          this.handleNonStreamingRequest(params, resolve, reject);
         }
       },
     );
@@ -62,117 +84,161 @@ export class OpenAIService extends LLMService {
   }
 
   private async handleNonStreamingRequest(
-    params: any,
+    params: {
+      messages: Message[];
+      tools?: Tool[];
+      temperature?: number;
+      maxTokens?: number;
+    },
     resolve: (value: Message) => void,
     reject: (reason?: any) => void,
   ) {
-    const response = await this.client.chat.completions.create(
-      params as any as ChatCompletionCreateParamsNonStreaming,
-    );
+    try {
+      const response = await this.client.chat.completions.create(
+        params as any as ChatCompletionCreateParamsNonStreaming,
+      );
 
-    if ("error" in response) {
-      throw new Error(`Upstream error: ${(response.error as any).message}`);
-    }
-    const message = new Message(
-      "assistant",
-      ("reasoning" in response.choices[0]!.message &&
-      response.choices[0]!.message.reasoning
-        ? `\n<think>\n${response.choices[0]!.message.reasoning}\n</think>\n`
-        : "") + response.choices[0]?.message?.content || "",
-    );
-
-    if (this.parseToolCalls) {
-      resolve(this.processMessageToolCalls(message, this.parseToolCalls));
-    } else if (response.choices[0]?.message?.tool_calls) {
-      try {
-        message.toolCalls = response.choices[0].message.tool_calls?.map(
-          (toolCall) =>
-            new ToolCall(
-              toolCall.id,
-              toolCall.function.name,
-              toolCall.function.arguments
-                ? JSON.parse(toolCall.function.arguments)
-                : undefined,
-            ),
-        );
-      } catch (e: any) {
-        console.error(e.stack);
+      if ("error" in response) {
+        // @ts-ignore
+        throw new Error(`Upstream error: ${response.error.message}`);
       }
-      resolve(message);
-    } else {
-      resolve(message);
+      const message = new Message(
+        "assistant",
+        ("reasoning" in response.choices[0]!.message &&
+        response.choices[0]!.message.reasoning
+          ? `\n<think>\n${response.choices[0]!.message.reasoning}\n</think>\n`
+          : "") + response.choices[0]?.message?.content || "",
+      );
+
+      if (this.parseToolCalls) {
+        // Use base class tool parsing for manual parsing
+        resolve(this.processMessageToolCalls(message, this.parseToolCalls));
+      } else if (response.choices[0]?.message?.tool_calls) {
+        // Use native OpenAI tool calls
+        try {
+          message.toolCalls = response.choices[0].message.tool_calls?.map(
+            (toolCall) =>
+              new ToolCall(
+                toolCall.id,
+                toolCall.function.name,
+                // TODO: this is duplication
+                toolCall.function.arguments
+                  ? JSON.parse(toolCall.function.arguments)
+                  : undefined,
+              ),
+          );
+        } catch (e: any) {
+          console.error(e.stack);
+        }
+        resolve(message);
+      } else {
+        resolve(message);
+      }
+    } catch (error) {
+      reject(error);
     }
   }
 
-  private async handleStreamingRequest(
-    params: any,
-    resolve: (value: Message) => void,
-    reject: (reason?: any) => void,
-  ): Promise<void> {
+  private async handleStreamingRequest(params: {
+    messages: Message[];
+    tools?: Tool[];
+    temperature?: number;
+    maxTokens?: number;
+  }): Promise<EventEmitter> {
 
     const stream = (await this.client.chat.completions.create(
       params as any as ChatCompletionCreateParamsStreaming,
     )) as AsyncIterable<OpenAI.Chat.Completions.ChatCompletionChunk>;
 
+    // Create a source emitter for the raw stream
     const emitter = new EventEmitter();
+
+    let thinking = false;
     const toolCalls: (ToolCall & { tempArgs?: string })[] = [];
     let accumulatedContent = "";
 
+    // Use base class parsing to handle tool parsing if needed
     const parsedEmitter = this.handleStreamingWithToolParsing(
       emitter,
     );
 
-    parsedEmitter.on("complete", (message) => {
-      resolve(message);
-    });
+    try {
+      (async () => {
+        for await (const chunk of stream) {
+          // Handle native tool calls (when parseToolCalls=false)
+          if (!this.parseToolCalls && chunk.choices[0]!.delta.tool_calls) {
+            for (const toolCall of chunk.choices[0]!.delta.tool_calls) {
+              if (!toolCalls[toolCall.index]) {
+                toolCalls[toolCall.index] = new ToolCall(String(toolCall.id));
+                toolCalls[toolCall.index]!.tempArgs = "";
+              }
+              if (toolCall.function?.name) {
+                toolCalls[toolCall.index]!.name += toolCall.function.name;
+              }
+              if (toolCall.function?.arguments) {
+                toolCalls[toolCall.index]!.tempArgs +=
+                  toolCall.function.arguments;
+              }
+            }
+          }
 
-    for await (const chunk of stream) {
-      if (!this.parseToolCalls && chunk.choices[0]!.delta.tool_calls) {
-        for (const toolCall of chunk.choices[0]!.delta.tool_calls) {
-          if (!toolCalls[toolCall.index]) {
-            toolCalls[toolCall.index] = new ToolCall(String(toolCall.id));
-            toolCalls[toolCall.index]!.tempArgs = "";
+          // Handle content chunks
+          if (chunk.choices[0]!.delta?.content) {
+            const content = chunk.choices[0]!.delta?.content;
+            accumulatedContent += content;
+            emitter.emit("chunk", content);
           }
-          if (toolCall.function?.name) {
-            toolCalls[toolCall.index]!.name += toolCall.function.name;
-          }
-          if (toolCall.function?.arguments) {
-            toolCalls[toolCall.index]!.tempArgs +=
-              toolCall.function.arguments;
+
+          // Handle reasoning/thinking
+          if (
+            "reasoning" in chunk.choices[0]!.delta &&
+            chunk.choices[0]!.delta.reasoning
+          ) {
+            const reasoning = chunk.choices[0]!.delta.reasoning;
+            if (!thinking) {
+              thinking = true;
+              emitter.emit("chunk", "\n<think>\n");
+            }
+            emitter.emit("chunk", reasoning);
+          } else {
+            if (thinking) {
+              thinking = false;
+              emitter.emit("chunk", "\n</think>\n");
+            }
           }
         }
-      }
 
-      if (chunk.choices[0]!.delta?.content) {
-        const content = chunk.choices[0]!.delta?.content;
-        accumulatedContent += content;
-        emitter.emit("chunk", content);
-      }
-    }
-
-    if (!this.parseToolCalls && toolCalls.length > 0) {
-      for (const toolCall of toolCalls) {
-        if (toolCall?.name) {
-          try {
-            toolCall.args = toolCall.tempArgs
-              ? typeof toolCall.tempArgs == "string"
-                ? parseToolCallArgs(<string>toolCall.tempArgs)
-                : toolCall.tempArgs
-              : {};
-            emitter.emit("toolCall", toolCall);
-          } catch (e) {
-            emitter.emit("error", e);
-            console.log(toolCall);
+        // Process any completed native tool calls
+        if (!this.parseToolCalls && toolCalls.length > 0) {
+          for (const toolCall of toolCalls) {
+            if (toolCall?.name) {
+              try {
+                toolCall.args = toolCall.tempArgs
+                  ? // TODO: should this be parsed here?
+                    typeof toolCall.tempArgs == "string"
+                    ? parseToolCallArgs(<string>toolCall.tempArgs)
+                    : toolCall.tempArgs
+                  : {};
+                emitter.emit("toolCall", toolCall);
+              } catch (e) {
+                emitter.emit("error", e);
+                console.log(toolCall);
+              }
+            }
           }
         }
-      }
+
+        const message = new Message("assistant", accumulatedContent);
+        if (!this.parseToolCalls && toolCalls.length > 0) {
+          message.toolCalls = toolCalls.filter((tc) => tc?.name);
+        }
+        emitter.emit("complete", message);
+      })().then();
+    } catch (error) {
+      emitter.emit("error", error);
     }
 
-    const message = new Message("assistant", accumulatedContent);
-    if (!this.parseToolCalls && toolCalls.length > 0) {
-      message.toolCalls = toolCalls.filter((tc) => tc?.name);
-    }
-    emitter.emit("complete", message);
+    return parsedEmitter;
   }
 }
 
@@ -184,34 +250,50 @@ export function convertMessagesToOpenApi(
     content: message.content,
     tool_calls:
       "toolCalls" in message
-        ? message.toolCalls?.map((toolCall) => ({
-            type: "function",
-            id: toolCall.id,
-            function: {
-              name: toolCall.name,
-              arguments: JSON.stringify(toolCall.args),
-            },
-          }))
+        ? message.toolCalls?.map((toolCall) => {
+            return {
+              type: "function",
+              id: toolCall.id,
+              function: {
+                name: toolCall.name,
+                arguments: JSON.stringify(toolCall.args),
+              },
+            };
+          })
         : undefined,
     tool_call_id: ("toolCallId" in message ? message.toolCallId : undefined)!,
   }));
 }
 
+/**
+ * Parses tool call arguments from either JSON or XML format
+ * @param args String containing tool call arguments
+ * @returns Parsed object with parameter values
+ */
 function parseToolCallArgs(args: string): any {
+  // Try parsing as JSON first
   try {
     return JSON.parse(args);
   } catch (e) {
+    // If JSON parsing fails, try XML format
     const result: Record<string, string> = {};
+
+    // Match XML pattern: <parameter=name>value</parameter>
     const regex = /<parameter=([^>]+)>(.*?)<\/parameter>/g;
     let match;
+
     while ((match = regex.exec(args)) !== null) {
       const paramName = match[1]!;
       const paramValue = match[2]!;
       result[paramName] = paramValue;
     }
+
+    // If we found any parameters, return the result object
     if (Object.keys(result).length > 0) {
       return result;
     }
+
+    // If no XML parameters were found, rethrow the original JSON parse error
     throw e;
   }
 }
