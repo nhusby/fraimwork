@@ -2,10 +2,10 @@ import express from "express";
 import type { NextFunction, Request, Response } from "express";
 import cors from "cors";
 import * as fs from "fs";
-import { createDoofyDevAgent } from "./agents/DoofyDevAgent.js";
 import { Message, Agent } from "@fraimwork/core";
 import { OpenAIService } from "@fraimwork/openai";
 import { createHash } from "crypto";
+import {DoofyDevAgent} from "src/agents/DoofyDevAgent.js";
 
 const conversationHistoryFile = "./conversationHistory.json";
 
@@ -78,7 +78,7 @@ app.post(
       }
 
       const llm = new OpenAIService(llmConfig);
-      const agent = createDoofyDevAgent({ llm });
+      const agent = new DoofyDevAgent(llm);
 
       const userMessages = messages.filter(
         (message: any) => message.role == "user",
