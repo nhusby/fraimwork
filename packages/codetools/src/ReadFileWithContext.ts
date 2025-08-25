@@ -2,6 +2,7 @@ import * as fs from "fs/promises";
 import * as path from "path";
 import * as ts from "typescript";
 import { Tool } from "@fraimwork/core";
+import { resolvePathAlias } from "./PathAliasResolver.js";
 
 /**
  * Reads a file and includes relevant context from imported dependencies
@@ -139,11 +140,6 @@ async function processImportDeclaration(
   
   const importPath = moduleSpecifier.text;
   
-  // Handle relative imports only
-  if (!importPath.startsWith('.')) {
-    return null; // Skip external packages
-  }
-  
   // Resolve the import path to an actual file
   const resolvedPath = await resolveImportPath(importPath, fileDir);
   if (!resolvedPath) {
@@ -170,10 +166,18 @@ async function processImportDeclaration(
   if (isExtendedOrImplemented(sourceFile, importedContent, node)) {
     // Include entire file content
     const relativePath = path.relative(process.cwd(), resolvedPath);
-    return `> contents of ${relativePath}:\n` +
-           "```" + getLanguageId(importedExt) + "\n" +
-           importedContent.trim() + "\n" +
-           "```\n\n";
+    let result = `> contents of ${relativePath}:\n` +
+                 "```" + getLanguageId(importedExt) + "\n" +
+                 importedContent.trim() + "\n" +
+                 "```\n\n";
+    
+    // Handle re-exports in the imported file
+    const reExports = await processReExports(importedContent, resolvedPath);
+    if (reExports) {
+      result += reExports;
+    }
+    
+    return result;
   } else {
     // For specific symbol imports, extract each symbol with context
     let result = "";
@@ -207,8 +211,81 @@ async function processImportDeclaration(
       }
     }
     
+    // Handle re-exports in the imported file even for specific symbol imports
+    const reExports = await processReExports(importedContent, resolvedPath);
+    if (reExports) {
+      result += reExports;
+    }
+    
     return result;
   }
+}
+
+/**
+ * Process re-export declarations in a file and extract relevant context
+ */
+async function processReExports(fileContent: string, filePath: string): Promise<string | null> {
+  const sourceFile = ts.createSourceFile(
+    filePath,
+    fileContent,
+    ts.ScriptTarget.Latest,
+    true
+  );
+  
+  let result = "";
+  const fileDir = path.dirname(filePath);
+  
+  // Collect all export declarations to process
+  const exportPromises: Promise<string | null>[] = [];
+  
+  // Traverse the AST to find export declarations
+  sourceFile.forEachChild(node => {
+    // Handle export * from "..." declarations
+    if (ts.isExportDeclaration(node) && node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
+      const exportPath = node.moduleSpecifier.text;
+      
+      // Create a promise for processing this export
+      const exportPromise = resolveImportPath(exportPath, fileDir).then(async (resolvedPath) => {
+        if (resolvedPath) {
+          // Check if this is a local file import (within the project)
+          const isLocalImport = resolvedPath.startsWith(process.cwd());
+          if (isLocalImport) {
+            try {
+              // Read and include the re-exported file
+              const reExportedContent = await fs.readFile(resolvedPath, "utf-8");
+              const reExportedExt = path.extname(resolvedPath).toLowerCase();
+              const relativePath = path.relative(process.cwd(), resolvedPath);
+              return `> contents of ${relativePath} (re-exported):\n` +
+                     "```" + getLanguageId(reExportedExt) + "\n" +
+                     reExportedContent.trim() + "\n" +
+                     "```\n\n";
+            } catch (error) {
+              // Ignore errors in re-export processing
+              return null;
+            }
+          }
+        }
+        return null;
+      }).catch(() => {
+        // Ignore errors in path resolution
+        return null;
+      });
+      
+      exportPromises.push(exportPromise);
+    }
+  });
+  
+  // Wait for all export processing to complete
+  const exportResults = await Promise.all(exportPromises);
+  
+  // Combine all results
+  for (const exportResult of exportResults) {
+    if (exportResult) {
+      result += exportResult;
+    }
+  }
+  
+  return result || null;
 }
 
 /**
@@ -418,46 +495,53 @@ function extractSymbolDefinition(lines: string[], lineIndex: number): string {
  * Resolve an import path to an actual file path
  */
 async function resolveImportPath(importPath: string, sourceDir: string): Promise<string | null> {
-  // Handle relative imports only
-  if (!importPath.startsWith('.')) {
-    return null; // Skip external packages
-  }
-  
-  // Resolve relative path
-  let resolvedPath = path.resolve(sourceDir, importPath);
-  
-  // Check if it's a directory import (no extension)
-  if (!path.extname(resolvedPath)) {
-    // Try common extensions
-    const extensions = ['.ts', '.tsx', '.js', '.jsx'];
-    for (const ext of extensions) {
-      const withExt = resolvedPath + ext;
-      try {
-        await fs.access(withExt);
-        return withExt;
-      } catch {
-        // Continue trying
+  // Handle relative imports
+  if (importPath.startsWith('.')) {
+    // Resolve relative path
+    let resolvedPath = path.resolve(sourceDir, importPath);
+    
+    // Check if it's a directory import (no extension)
+    if (!path.extname(resolvedPath)) {
+      // Try common extensions
+      const extensions = ['.ts', '.tsx', '.js', '.jsx'];
+      for (const ext of extensions) {
+        const withExt = resolvedPath + ext;
+        try {
+          await fs.access(withExt);
+          return withExt;
+        } catch {
+          // Continue trying
+        }
+        
+        // Try with /index.ext
+        const indexPath = path.join(resolvedPath, 'index' + ext);
+        try {
+          await fs.access(indexPath);
+          return indexPath;
+        } catch {
+          // Continue trying
+        }
       }
-      
-      // Try with /index.ext
-      const indexPath = path.join(resolvedPath, 'index' + ext);
+    } else {
+      // Check if file exists as-is
       try {
-        await fs.access(indexPath);
-        return indexPath;
+        await fs.access(resolvedPath);
+        return resolvedPath;
       } catch {
-        // Continue trying
+        // File doesn't exist
       }
     }
-  } else {
-    // Check if file exists as-is
-    try {
-      await fs.access(resolvedPath);
-      return resolvedPath;
-    } catch {
-      // File doesn't exist
-    }
+    
+    return null;
   }
   
+  // Handle path aliases (e.g., @/*, ~/*)
+  const resolvedAliasPath = await resolvePathAlias(importPath, sourceDir);
+  if (resolvedAliasPath) {
+    return resolvedAliasPath;
+  }
+  
+  // Skip external packages
   return null;
 }
 
