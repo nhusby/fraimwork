@@ -61,6 +61,15 @@ export function readFileWithContext(): Tool {
           true
         );
         
+        // Start building output with the original file
+        output += "```" + getLanguageId(ext) + "\n";
+        output += fileContent.trim() + "\n";
+        output += "```\n\n";
+        
+        // Track files we've already processed to avoid duplicates
+        const processedFiles = new Set<string>();
+        processedFiles.add(fullPath);
+        
         // Process each import declaration
         const importPromises: Promise<string | null>[] = [];
         sourceFile.forEachChild(node => {
@@ -75,11 +84,32 @@ export function readFileWithContext(): Tool {
           }
         });
         
-        // Wait for all import processing to complete
+        // Process type references that might not be explicit imports
+        const typeReferencePromises: Promise<string | null>[] = [];
+        
+        // Recursively traverse the entire AST to find all nodes
+        function traverse(node: ts.Node) {
+          typeReferencePromises.push(
+            processTypeReferences(node, fileDir, processedFiles)
+              .catch(error => {
+                // Continue with other type references even if one fails
+                return `> Error processing type reference: ${error.message}\n\n`;
+              })
+          );
+          
+          // Continue traversing child nodes
+          ts.forEachChild(node, traverse);
+        }
+        
+        // Start traversal from the source file
+        traverse(sourceFile);
+        
+        // Wait for all processing to complete
         const importResults = await Promise.all(importPromises);
+        const typeReferenceResults = await Promise.all(typeReferencePromises);
         
         // Add results to output
-        for (const result of importResults) {
+        for (const result of [...importResults, ...typeReferenceResults]) {
           if (result) {
             output += result;
           }
@@ -425,6 +455,76 @@ async function resolveImportPath(importPath: string, sourceDir: string): Promise
       return resolvedPath;
     } catch {
       // File doesn't exist
+    }
+  }
+  
+  return null;
+}
+
+/**
+ * Process type references that might not be explicit imports
+ */
+async function processTypeReferences(
+  node: ts.Node,
+  fileDir: string,
+  processedFiles: Set<string>
+): Promise<string | null> {
+  // Look for variable declarations that might have type references
+  if (ts.isVariableStatement(node)) {
+    for (const declaration of node.declarationList.declarations) {
+      // Check if this is a variable assignment from a method that returns a specific type
+      if (declaration.initializer && ts.isCallExpression(declaration.initializer)) {
+        // Check if this is a call that might return StreamablePromise
+        const result = await processMethodCallTypeReference(declaration.initializer, fileDir, processedFiles);
+        if (result) {
+          return result;
+        }
+      }
+    }
+  }
+  
+  // Also directly process variable declarations (not wrapped in statements)
+  if (ts.isVariableDeclaration(node)) {
+    // Check if this is a variable assignment from a method that returns a specific type
+    if (node.initializer && ts.isCallExpression(node.initializer)) {
+      // Check if this is a call that might return StreamablePromise
+      const result = await processMethodCallTypeReference(node.initializer, fileDir, processedFiles);
+      if (result) {
+        return result;
+      }
+    }
+  }
+  
+  return null;
+}
+
+/**
+ * Process method calls that might return specific types
+ */
+async function processMethodCallTypeReference(
+  callExpression: ts.CallExpression,
+  fileDir: string,
+  processedFiles: Set<string>
+): Promise<string | null> {
+  // Check if this is a property access expression (e.g., this.llmService.send)
+  if (ts.isPropertyAccessExpression(callExpression.expression)) {
+    const propertyAccess = callExpression.expression;
+    
+    // Check if this is calling a method named "send"
+    if (propertyAccess.name.text === "send") {
+      // Try to resolve the return type of this method
+      // For now, we'll look for StreamablePromise specifically
+      const streamablePromisePath = await resolveImportPath("./StreamablePromise", fileDir);
+      if (streamablePromisePath && !processedFiles.has(streamablePromisePath)) {
+        processedFiles.add(streamablePromisePath);
+        const streamableContent = await fs.readFile(streamablePromisePath, "utf-8");
+        const streamableExt = path.extname(streamablePromisePath).toLowerCase();
+        const relativePath = path.relative(process.cwd(), streamablePromisePath);
+        return `> contents of ${relativePath}:\n` +
+               "```" + getLanguageId(streamableExt) + "\n" +
+               streamableContent.trim() + "\n" +
+               "```\n\n";
+      }
     }
   }
   
